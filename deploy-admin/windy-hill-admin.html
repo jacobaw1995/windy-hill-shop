@@ -1060,13 +1060,25 @@ async function openOrderDetail(orderId) {
   );
 
   // ── Status block ──
+  var paymentBadge = o.payment_status === 'paid'
+    ? '<span class="text-xs font-semibold px-2 py-0.5 rounded bg-green-100 text-green-700">✅ Paid</span>'
+    : o.payment_status === 'failed'
+    ? '<span class="text-xs font-semibold px-2 py-0.5 rounded bg-red-100 text-red-700">❌ Failed</span>'
+    : '<span class="text-xs font-semibold px-2 py-0.5 rounded bg-amber-100 text-amber-700">⏳ Pending</span>';
+
+  var pdfBtn = o.pdf_url
+    ? '<a href="' + esc(o.pdf_url) + '" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-navy text-white hover:opacity-80 transition-opacity" style="background:#1a2d4f">📄 View Work Order PDF</a>'
+    : '<span class="text-xs text-gray-400">PDF not yet generated</span>';
+
   html += section('Status',
-    '<div class="flex items-center gap-3 flex-wrap">' +
+    '<div class="flex items-center gap-3 flex-wrap mb-3">' +
     '<span id="detail-status-badge">' + statusBadgeHTML(o.status) + '</span>' +
+    paymentBadge +
     (o.webhook_fired
-      ? '<span class="text-xs text-green-600 font-medium">✅ Webhook Fired</span>'
-      : '<span class="text-xs text-amber-600 font-medium">⚠ Webhook Not Fired</span>') +
-    '</div>'
+      ? '<span class="text-xs text-green-600 font-medium">✅ Emails Sent</span>'
+      : '<span class="text-xs text-amber-600 font-medium">⚠ Emails Not Sent</span>') +
+    '</div>' +
+    pdfBtn
   );
 
   // ── Line items block ──

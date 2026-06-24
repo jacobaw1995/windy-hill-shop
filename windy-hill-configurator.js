@@ -2184,21 +2184,32 @@ async function runCheckoutProcessing() {
     return;
   }
 
-  // Step 3 — Fire webhook to Make.com (non-fatal)
+  // Step 3 — Generate PDF + send emails via Edge Function (non-fatal)
   setProcStep(3, false);
   var webhookFired = false;
   try {
-    await fireWebhook(lastCheckoutPayload);
-    webhookFired = true;
+    var edgeRes = await fetch(SUPABASE_URL + '/functions/v1/process-order', {
+      method:  'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+        'apikey': SUPABASE_ANON_KEY,
+      },
+      body: JSON.stringify({ order_id: orderId }),
+    });
+    var edgeData = await edgeRes.json();
+    webhookFired = !!edgeData.ok;
   } catch(e) {
     webhookFired = false;
   }
   setProcStep(3, true);
 
-  // Step 4 — Update webhook_fired flag
+  // Step 4 — Update webhook_fired flag (edge function already does this, belt-and-suspenders)
   setProcStep(4, false);
   try {
-    await db.from('orders').update({ webhook_fired: webhookFired }).eq('id', lastSupabaseOrderId);
+    if (!webhookFired) {
+      await db.from('orders').update({ webhook_fired: false }).eq('id', lastSupabaseOrderId);
+    }
   } catch(e) { /* non-fatal */ }
   setProcStep(4, true);
 
