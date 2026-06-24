@@ -263,9 +263,12 @@
         <!-- View: Products -->
         <div id="prod-view-products" class="hidden">
           <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-            <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+            <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between gap-3">
               <h2 id="prods-title" class="font-bold text-gray-800">Products</h2>
-              <button onclick="openProductModal(null)" class="btn-rust text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors">+ Add Product</button>
+              <div class="flex gap-2">
+                <button onclick="openProductPicker()" class="text-xs font-semibold px-3 py-1.5 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors">Copy Existing</button>
+                <button onclick="openProductModal(null)" class="btn-rust text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors">+ New Product</button>
+              </div>
             </div>
             <div id="prods-loading" class="py-12 flex justify-center"><div class="spinner"></div></div>
             <div id="prods-list" class="hidden"></div>
@@ -609,6 +612,9 @@
           <button onclick="saveSystem()" class="btn-rust flex-1 py-2.5 rounded-lg font-semibold text-sm transition-colors">Save Changes</button>
           <button onclick="closeSystemModal()" class="flex-1 py-2.5 rounded-lg font-semibold text-sm border border-gray-200 hover:bg-gray-100 transition-colors">Cancel</button>
         </div>
+        <div id="sm-delete-wrap" class="hidden pb-4">
+          <button onclick="deleteSystem($('sm-id').value)" class="w-full py-2 rounded-lg text-xs font-semibold text-red-500 border border-red-200 hover:bg-red-50 transition-colors">Delete System</button>
+        </div>
       </div>
     </div>
   </div>
@@ -731,6 +737,20 @@
         <button onclick="closeProductModal()" class="flex-1 py-2.5 rounded-lg font-semibold text-sm border border-gray-200 hover:bg-gray-100 transition-colors">Cancel</button>
       </div>
       <p id="pm-error" class="hidden text-xs text-red-600 px-6 pb-4"></p>
+    </div>
+  </div>
+
+  <!-- ── PRODUCT PICKER MODAL ──────────────────────────────────── -->
+  <div id="product-picker-modal" class="hidden fixed inset-0 z-60 flex items-center justify-center p-4" style="background:rgba(0,0,0,0.55)">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg flex flex-col" style="max-height:85vh">
+      <div class="flex items-center justify-between px-6 py-4 border-b">
+        <h2 class="font-bold text-lg" style="color:#1a2d4f">Copy Existing Product</h2>
+        <button onclick="closeProductPicker()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+      </div>
+      <div class="px-4 py-3 border-b">
+        <input id="picker-search" type="text" placeholder="Search products..." class="modal-input" oninput="filterPickerList(this.value)">
+      </div>
+      <div id="picker-list" class="flex-1 overflow-y-auto divide-y divide-gray-50"></div>
     </div>
   </div>
 
@@ -1995,6 +2015,8 @@ function openSystemModal(system) {
     prev.classList.remove('hidden');
   } else { prev.classList.add('hidden'); }
   $('sm-image-file').value = '';
+  var delWrap = $('sm-delete-wrap');
+  if (delWrap) delWrap.classList.toggle('hidden', isNew);
   $('system-modal').classList.remove('hidden');
   document.body.style.overflow = 'hidden';
 }
@@ -2035,6 +2057,25 @@ async function saveSystem() {
     res = await db.from('systems').insert(payload);
   }
   if (res.error) { errEl.textContent = res.error.message; errEl.classList.remove('hidden'); return; }
+  closeSystemModal();
+  prodShowSystems();
+}
+
+async function deleteSystem(id) {
+  if (!id) return;
+  var sys = (prodState.systems || []).find(function(s) { return s.id === id; });
+  var name = sys ? sys.name : 'this system';
+  if (!confirm('Permanently delete "' + name + '"?\n\nThis will delete all its stages, categories, and products. This cannot be undone.')) return;
+  // Delete in order: products → categories → stages → system
+  var cats = await db.from('categories').select('id').eq('system_id', id);
+  if (cats.data && cats.data.length) {
+    var catIds = cats.data.map(function(c) { return c.id; });
+    await db.from('products').delete().in('category_id', catIds);
+    await db.from('categories').delete().eq('system_id', id);
+  }
+  await db.from('stages').delete().eq('system_id', id);
+  var res = await db.from('systems').delete().eq('id', id);
+  if (res.error) { alert('Delete failed: ' + res.error.message); return; }
   closeSystemModal();
   prodShowSystems();
 }
@@ -2164,6 +2205,62 @@ function updatePriceNullBadge() {
   var badge = $('pm-price-null-badge');
   if (!val && val !== 0) badge.classList.remove('hidden');
   else badge.classList.add('hidden');
+}
+
+var allPickerProducts = [];
+
+async function openProductPicker() {
+  $('picker-search').value = '';
+  $('picker-list').innerHTML = '<div class="py-8 text-center text-sm text-gray-400">Loading...</div>';
+  $('product-picker-modal').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+
+  var res = await db.from('products').select('*, categories(name, systems(name))').order('name');
+  if (res.error) { $('picker-list').innerHTML = '<div class="py-8 text-center text-sm text-red-400">' + res.error.message + '</div>'; return; }
+  allPickerProducts = res.data || [];
+  renderPickerList(allPickerProducts);
+}
+
+function renderPickerList(products) {
+  var el = $('picker-list');
+  if (!products.length) { el.innerHTML = '<div class="py-8 text-center text-sm text-gray-400">No products found.</div>'; return; }
+  el.innerHTML = products.map(function(p) {
+    var catName = p.categories ? p.categories.name : '';
+    var sysName = p.categories && p.categories.systems ? p.categories.systems.name : '';
+    var pj = JSON.stringify(p).replace(/"/g, '&quot;');
+    return '<div class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors" onclick="copyProductToCategory(' + pj + ')">' +
+      (p.image_url ? '<img src="' + esc(p.image_url) + '" class="w-10 h-10 rounded-lg object-cover flex-shrink-0">' : '<div class="w-10 h-10 rounded-lg bg-gray-100 flex-shrink-0"></div>') +
+      '<div class="flex-1 min-w-0">' +
+        '<div class="font-medium text-sm text-gray-800">' + esc(p.name) + '</div>' +
+        '<div class="text-xs text-gray-400">' + esc(sysName) + (catName ? ' › ' + esc(catName) : '') + (p.sku ? ' · ' + esc(p.sku) : '') + '</div>' +
+      '</div>' +
+      '<div class="text-xs text-gray-400 flex-shrink-0">' + (p.base_price != null ? '$' + Number(p.base_price).toFixed(2) : '—') + '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function filterPickerList(q) {
+  var filtered = q.trim() ? allPickerProducts.filter(function(p) {
+    return (p.name || '').toLowerCase().includes(q.toLowerCase()) ||
+           (p.sku || '').toLowerCase().includes(q.toLowerCase());
+  }) : allPickerProducts;
+  renderPickerList(filtered);
+}
+
+function copyProductToCategory(p) {
+  closeProductPicker();
+  // Pre-fill product modal with copied data, clearing IDs so it inserts as new
+  openProductModal({
+    name: p.name, sku: p.sku, description: p.description,
+    gauge: p.gauge, unit_type: p.unit_type, base_price: p.base_price,
+    finish: p.finish, image_url: p.image_url, active: p.active,
+    display_order: prodState.products.length + 1
+  });
+}
+
+function closeProductPicker() {
+  $('product-picker-modal').classList.add('hidden');
+  document.body.style.overflow = '';
 }
 
 function closeProductModal() {
