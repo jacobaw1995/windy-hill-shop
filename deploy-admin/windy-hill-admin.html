@@ -15,6 +15,11 @@
     .spinner   { border: 3px solid #e5e7eb; border-top-color: var(--rust); border-radius: 50%; width: 32px; height: 32px; animation: spin 0.8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    /* Kanban board */
+    #kanban-board { display: flex; align-items: flex-start; }
+    .kanban-card:active { cursor: grabbing; }
+    .kanban-zone.drop-active { border-color: #3b82f6 !important; background: #eff6ff !important; }
+
     /* Sidebar nav */
     .nav-link  { display: flex; align-items: center; gap: 10px; padding: 8px 14px; border-radius: 8px; font-size: 0.875rem; font-weight: 500; color: #94a3b8; cursor: pointer; transition: all 0.15s; user-select: none; }
     .nav-link:hover { background: rgba(255,255,255,0.07); color: #fff; }
@@ -225,7 +230,7 @@
           <button onclick="prodShowSystems()" class="hover:text-gray-800 font-medium transition-colors">Systems</button>
           <span id="bc-cat-wrap" class="hidden items-center gap-2">
             <span class="text-gray-300">›</span>
-            <button id="bc-system-btn" onclick="prodShowCategories(prodState.selectedSystem)" class="hover:text-gray-800 transition-colors"></button>
+            <button id="bc-system-btn" onclick="prodShowSystem(prodState.selectedSystem)" class="hover:text-gray-800 transition-colors"></button>
           </span>
           <span id="bc-prod-wrap" class="hidden items-center gap-2">
             <span class="text-gray-300">›</span>
@@ -247,14 +252,12 @@
 
         <!-- View: Categories -->
         <div id="prod-view-categories" class="hidden">
-          <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-            <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-              <h2 id="cats-title" class="font-bold text-gray-800">Categories</h2>
-              <button onclick="openCategoryModal(null)" class="btn-rust text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors">+ Add Category</button>
-            </div>
-            <div id="cats-loading" class="py-12 flex justify-center"><div class="spinner"></div></div>
-            <div id="cats-list" class="hidden divide-y divide-gray-50"></div>
+          <div class="mb-4 flex items-center justify-between">
+            <h2 id="cats-title" class="font-bold text-gray-800 text-lg"></h2>
+            <button onclick="addStage()" class="text-xs font-semibold px-3 py-1.5 rounded-lg border border-dashed border-gray-300 text-gray-500 hover:border-gray-500 hover:text-gray-700 transition-colors">+ Add Stage</button>
           </div>
+          <div id="cats-loading" class="py-12 flex justify-center"><div class="spinner"></div></div>
+          <div id="kanban-board" class="hidden flex gap-4 overflow-x-auto pb-6" style="min-height:520px"></div>
         </div>
 
         <!-- View: Products -->
@@ -619,6 +622,7 @@
       </div>
       <div class="flex-1 overflow-y-auto px-6 py-5 space-y-4">
         <input type="hidden" id="cm-id">
+        <input type="hidden" id="cm-stage-id">
         <div class="grid grid-cols-2 gap-4">
           <div><label class="modal-label">Name *</label>
             <input id="cm-name" type="text" class="modal-input"></div>
@@ -627,7 +631,11 @@
         </div>
         <div><label class="modal-label">Microcopy <span class="font-normal text-gray-400">(helper text in card)</span></label>
           <textarea id="cm-microcopy" rows="2" class="modal-input resize-none"></textarea></div>
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-3 gap-4">
+          <div><label class="modal-label">Stage</label>
+            <select id="cm-stage-select" class="modal-input">
+              <option value="">Unassigned</option>
+            </select></div>
           <div><label class="modal-label">Badge</label>
             <select id="cm-badge" class="modal-input">
               <option value="REQUIRED">REQUIRED</option>
@@ -1671,6 +1679,7 @@ function onSettingsTabOpen() { loadSettings(); }
 var prodState = {
   view: 'systems',
   systems: [],
+  stages: [],
   categories: [],
   products: [],
   selectedSystem: null,
@@ -1715,7 +1724,7 @@ function renderSystemsList() {
       '</div>' +
       '<div class="flex items-center gap-3 flex-shrink-0">' +
         activeBadge(s.active) +
-        '<button onclick="prodShowCategories(' + JSON.stringify(s).replace(/"/g,'&quot;') + ')" class="text-xs text-blue-600 hover:underline font-medium">Categories →</button>' +
+        '<button onclick="prodShowSystem(' + JSON.stringify(s).replace(/"/g,'&quot;') + ')" class="text-xs text-blue-600 hover:underline font-medium">Manage →</button>' +
         '<button onclick="openSystemModal(' + JSON.stringify(s).replace(/"/g,'&quot;') + ')" class="text-xs text-gray-500 hover:text-gray-800 border border-gray-200 rounded px-2 py-1 hover:bg-gray-50 transition-colors">Edit</button>' +
       '</div>' +
     '</div>';
@@ -1723,9 +1732,11 @@ function renderSystemsList() {
   el.classList.remove('hidden');
 }
 
-// ── Categories View ────────────────────────────────────────────
+// ── Kanban Board ───────────────────────────────────────────────
 
-async function prodShowCategories(system) {
+var draggingCatId = null;
+
+async function prodShowSystem(system) {
   prodState.selectedSystem = system;
   prodState.selectedCategory = null;
   prodState.view = 'categories';
@@ -1736,41 +1747,151 @@ async function prodShowCategories(system) {
   $('bc-cat-wrap').style.display = 'inline-flex';
   $('bc-system-btn').textContent = system.name;
   $('bc-prod-wrap').classList.add('hidden');
-  $('cats-title').textContent = system.name + ' — Categories';
+  $('cats-title').textContent = system.name;
   $('cats-loading').classList.remove('hidden');
-  $('cats-list').classList.add('hidden');
+  $('kanban-board').classList.add('hidden');
 
-  var res = await db.from('categories').select('*').eq('system_id', system.id).order('display_order');
+  var results = await Promise.all([
+    db.from('stages').select('*').eq('system_id', system.id).order('display_order'),
+    db.from('categories').select('*').eq('system_id', system.id).order('display_order')
+  ]);
   $('cats-loading').classList.add('hidden');
-  if (res.error) { alert('Error: ' + res.error.message); return; }
-  prodState.categories = res.data || [];
-  renderCategoriesList();
+  if (results[0].error) { alert('Error loading stages: ' + results[0].error.message); return; }
+  if (results[1].error) { alert('Error loading categories: ' + results[1].error.message); return; }
+  prodState.stages = results[0].data || [];
+  prodState.categories = results[1].data || [];
+  renderKanban();
 }
 
-function renderCategoriesList() {
-  var el = $('cats-list');
-  var BADGE_COLORS = { REQUIRED:'bg-red-100 text-red-700', RECOMMENDED:'bg-amber-100 text-amber-700', OPTIONAL:'bg-gray-100 text-gray-500' };
-  el.innerHTML = prodState.categories.map(function(c) {
-    return '<div class="flex items-center gap-4 px-5 py-3 hover:bg-gray-50 transition-colors">' +
-      '<div class="w-14 h-9 flex-shrink-0 rounded overflow-hidden bg-gray-100">' +
-        (c.image_url ? '<img src="' + esc(c.image_url) + '" class="w-full h-full object-cover">' : '<div class="w-full h-full flex items-center justify-center text-gray-300 text-xs">—</div>') +
-      '</div>' +
-      '<div class="flex-1 min-w-0">' +
-        '<div class="flex items-center gap-2">' +
-          '<span class="font-medium text-sm text-gray-800">' + esc(c.name) + '</span>' +
-          '<span class="text-xs font-semibold px-1.5 py-0.5 rounded ' + (BADGE_COLORS[c.badge]||'bg-gray-100 text-gray-500') + '">' + esc(c.badge||'') + '</span>' +
+function renderKanban() {
+  var board = $('kanban-board');
+  var BADGE_CLS = { REQUIRED:'bg-red-100 text-red-700', RECOMMENDED:'bg-amber-100 text-amber-700', OPTIONAL:'bg-gray-100 text-gray-500' };
+
+  function catCard(cat) {
+    var cj = JSON.stringify(cat).replace(/"/g,'&quot;');
+    var bc = BADGE_CLS[cat.badge] || 'bg-gray-100 text-gray-500';
+    return '<div class="kanban-card bg-white rounded-xl border border-gray-200 p-3 shadow-sm hover:shadow-md transition-shadow cursor-grab active:cursor-grabbing select-none"' +
+      ' draggable="true" ondragstart="startDrag(event,\'' + cat.id + '\')" ondragend="endDrag(event)" data-cat-id="' + cat.id + '">' +
+      '<div class="flex items-center gap-2 mb-2">' +
+        (cat.image_url ? '<img src="' + esc(cat.image_url) + '" class="w-10 h-10 rounded-lg object-cover flex-shrink-0 bg-gray-100">' : '<div class="w-10 h-10 rounded-lg bg-gray-100 flex-shrink-0 flex items-center justify-center text-gray-300 text-xs">—</div>') +
+        '<div class="min-w-0">' +
+          '<div class="font-semibold text-sm text-gray-800 leading-tight truncate">' + esc(cat.name) + '</div>' +
+          '<span class="text-xs font-semibold px-1.5 py-0.5 rounded ' + bc + '">' + esc(cat.badge||'OPTIONAL') + '</span>' +
         '</div>' +
-        '<div class="text-xs text-gray-400 truncate">' + esc(c.microcopy || '') + '</div>' +
       '</div>' +
-      '<div class="flex items-center gap-3 flex-shrink-0">' +
-        activeBadge(c.active) +
-        '<button onclick="prodShowProducts(' + JSON.stringify(c).replace(/"/g,'&quot;') + ')" class="text-xs text-blue-600 hover:underline font-medium">Products →</button>' +
-        '<button onclick="openCategoryModal(' + JSON.stringify(c).replace(/"/g,'&quot;') + ')" class="text-xs text-gray-500 hover:text-gray-800 border border-gray-200 rounded px-2 py-1 hover:bg-gray-50 transition-colors">Edit</button>' +
-        '<button onclick="deleteCategory(\'' + c.id + '\')" class="text-xs text-red-400 hover:text-red-600 border border-red-100 rounded px-2 py-1 hover:bg-red-50 transition-colors">Del</button>' +
+      (cat.microcopy ? '<div class="text-xs text-gray-400 mb-2 leading-snug">' + esc(cat.microcopy) + '</div>' : '') +
+      '<div class="flex gap-1.5">' +
+        '<button onclick="event.stopPropagation();openCategoryModal(' + cj + ')" class="flex-1 text-xs text-gray-500 hover:text-gray-800 border border-gray-200 rounded-lg px-2 py-1.5 hover:bg-gray-50 transition-colors">Edit</button>' +
+        '<button onclick="event.stopPropagation();prodShowProducts(' + cj + ')" class="flex-1 text-xs text-blue-600 font-medium border border-blue-100 rounded-lg px-2 py-1.5 hover:bg-blue-50 transition-colors">Products →</button>' +
+        '<button onclick="event.stopPropagation();deleteCategory(\'' + cat.id + '\')" class="text-xs text-red-400 hover:text-red-600 border border-red-100 rounded-lg px-2 py-1.5 hover:bg-red-50 transition-colors">✕</button>' +
       '</div>' +
     '</div>';
-  }).join('') || '<div class="px-5 py-8 text-sm text-gray-400 text-center">No categories yet. Add one above.</div>';
-  el.classList.remove('hidden');
+  }
+
+  function stageCol(stage, cats) {
+    var sname = stage.name.replace(/'/g, "\\'");
+    return '<div class="kanban-col flex-shrink-0 flex flex-col" style="width:260px">' +
+      '<div class="flex items-center justify-between mb-2 px-1">' +
+        '<span class="font-bold text-xs uppercase tracking-wider text-gray-500">' + esc(stage.name) + '</span>' +
+        '<div class="flex gap-1">' +
+          '<button onclick="renameStage(\'' + stage.id + '\',\'' + sname + '\')" class="text-gray-400 hover:text-gray-700 px-1 text-xs" title="Rename">✏</button>' +
+          '<button onclick="deleteStage(\'' + stage.id + '\')" class="text-red-300 hover:text-red-600 px-1 text-xs" title="Delete stage">✕</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="kanban-zone flex-1 rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 p-2 space-y-2 transition-colors" style="min-height:220px"' +
+        ' data-stage-id="' + stage.id + '"' +
+        ' ondragover="allowDrop(event)" ondragleave="dragLeave(event)" ondrop="dropOnStage(event,\'' + stage.id + '\')">' +
+        (cats.length ? cats.map(catCard).join('') : '<div class="text-xs text-gray-400 text-center py-10">Drop here</div>') +
+      '</div>' +
+      '<button onclick="addCategoryToStage(\'' + stage.id + '\')" class="mt-2 w-full text-xs text-gray-400 hover:text-gray-700 border border-dashed border-gray-200 rounded-lg py-2 hover:border-gray-400 transition-colors">+ Category</button>' +
+    '</div>';
+  }
+
+  var unassigned = prodState.categories.filter(function(c) { return !c.stage_id; });
+
+  var html = prodState.stages.map(function(stage) {
+    var cats = prodState.categories.filter(function(c) { return c.stage_id === stage.id; });
+    return stageCol(stage, cats);
+  }).join('');
+
+  // Unassigned pool
+  html += '<div class="kanban-col flex-shrink-0 flex flex-col" style="width:260px">' +
+    '<div class="mb-2 px-1"><span class="font-bold text-xs uppercase tracking-wider text-amber-500">Unassigned</span></div>' +
+    '<div class="kanban-zone flex-1 rounded-xl border-2 border-dashed border-amber-200 bg-amber-50 p-2 space-y-2 transition-colors" style="min-height:220px"' +
+      ' data-stage-id="unassigned"' +
+      ' ondragover="allowDrop(event)" ondragleave="dragLeave(event)" ondrop="dropOnStage(event,\'unassigned\')">' +
+      (unassigned.length ? unassigned.map(catCard).join('') : '<div class="text-xs text-amber-400 text-center py-10">All assigned ✓</div>') +
+    '</div>' +
+    '<button onclick="addCategoryToStage(null)" class="mt-2 w-full text-xs text-gray-400 hover:text-gray-700 border border-dashed border-gray-200 rounded-lg py-2 hover:border-gray-400 transition-colors">+ Category</button>' +
+  '</div>';
+
+  // Add stage button
+  html += '<div class="flex-shrink-0 flex items-start pt-6" style="width:180px">' +
+    '<button onclick="addStage()" class="w-full text-sm text-gray-400 hover:text-gray-700 border-2 border-dashed border-gray-200 rounded-xl py-8 hover:border-gray-400 transition-colors">+ Add Stage</button>' +
+  '</div>';
+
+  board.innerHTML = html;
+  board.classList.remove('hidden');
+}
+
+function startDrag(e, catId) {
+  draggingCatId = catId;
+  e.dataTransfer.effectAllowed = 'move';
+  setTimeout(function() { if (e.target) e.target.style.opacity = '0.4'; }, 0);
+}
+
+function endDrag(e) {
+  if (e.target) e.target.style.opacity = '';
+}
+
+function allowDrop(e) {
+  e.preventDefault();
+  e.currentTarget.classList.add('border-blue-400', 'bg-blue-50');
+}
+
+function dragLeave(e) {
+  e.currentTarget.classList.remove('border-blue-400', 'bg-blue-50');
+}
+
+async function dropOnStage(e, stageId) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('border-blue-400', 'bg-blue-50');
+  if (!draggingCatId) return;
+  var newStageId = stageId === 'unassigned' ? null : stageId;
+  var res = await db.from('categories').update({ stage_id: newStageId }).eq('id', draggingCatId);
+  draggingCatId = null;
+  if (res.error) { alert('Move failed: ' + res.error.message); return; }
+  prodShowSystem(prodState.selectedSystem);
+}
+
+async function addStage() {
+  var name = prompt('Stage name (e.g. "Panels", "Trim & Closures"):');
+  if (!name || !name.trim()) return;
+  var maxOrder = (prodState.stages || []).reduce(function(m, s) { return Math.max(m, s.display_order); }, 0);
+  var res = await db.from('stages').insert({ system_id: prodState.selectedSystem.id, name: name.trim(), display_order: maxOrder + 1 });
+  if (res.error) { alert('Error: ' + res.error.message); return; }
+  prodShowSystem(prodState.selectedSystem);
+}
+
+async function renameStage(stageId, currentName) {
+  var name = prompt('Rename stage:', currentName);
+  if (!name || !name.trim() || name.trim() === currentName) return;
+  var res = await db.from('stages').update({ name: name.trim() }).eq('id', stageId);
+  if (res.error) { alert('Error: ' + res.error.message); return; }
+  prodShowSystem(prodState.selectedSystem);
+}
+
+async function deleteStage(stageId) {
+  var assigned = (prodState.categories || []).filter(function(c) { return c.stage_id === stageId; });
+  if (assigned.length) { alert('Move or remove the ' + assigned.length + ' categor' + (assigned.length === 1 ? 'y' : 'ies') + ' in this stage first.'); return; }
+  if (!confirm('Delete this stage? This cannot be undone.')) return;
+  var res = await db.from('stages').delete().eq('id', stageId);
+  if (res.error) { alert('Error: ' + res.error.message); return; }
+  prodShowSystem(prodState.selectedSystem);
+}
+
+function addCategoryToStage(stageId) {
+  openCategoryModal(null, stageId);
 }
 
 // ── Products View ──────────────────────────────────────────────
@@ -1920,10 +2041,10 @@ async function saveSystem() {
 
 // ── Category Modal ─────────────────────────────────────────────
 
-function openCategoryModal(cat) {
-  var isNew = !cat;
+function openCategoryModal(cat, stageId) {
+  var isNew = !cat || !cat.id;
   $('cm-title').textContent = isNew ? 'Add Category' : 'Edit Category';
-  $('cm-id').value          = cat ? cat.id : '';
+  $('cm-id').value          = (cat && cat.id) ? cat.id : '';
   $('cm-name').value        = cat ? cat.name || '' : '';
   $('cm-slug').value        = cat ? cat.slug || '' : '';
   $('cm-microcopy').value   = cat ? cat.microcopy || '' : '';
@@ -1933,6 +2054,17 @@ function openCategoryModal(cat) {
   $('cm-active').checked    = cat ? !!cat.active : true;
   $('cm-required').checked  = cat ? !!cat.required : false;
   $('cm-error').classList.add('hidden');
+
+  // Populate stage select
+  var stageSelect = $('cm-stage-select');
+  stageSelect.innerHTML = '<option value="">Unassigned</option>' +
+    (prodState.stages || []).map(function(s) {
+      return '<option value="' + s.id + '">' + esc(s.name) + '</option>';
+    }).join('');
+  var currentStageId = stageId || (cat && cat.stage_id) || '';
+  stageSelect.value = currentStageId;
+  $('cm-stage-id').value = currentStageId;
+
   var prev = $('cm-img-preview');
   if (cat && cat.image_url) { $('cm-img-thumb').src = cat.image_url; prev.classList.remove('hidden'); }
   else { prev.classList.add('hidden'); }
@@ -1970,6 +2102,7 @@ async function saveCategory() {
     imageUrl = db.storage.from('product-photos').getPublicUrl(path).data.publicUrl;
   }
 
+  var stageVal = $('cm-stage-select').value || null;
   var data = {
     name:          name,
     slug:          slug,
@@ -1979,7 +2112,8 @@ async function saveCategory() {
     skip_label:    $('cm-skip-label').value.trim(),
     active:        $('cm-active').checked,
     required:      $('cm-required').checked,
-    system_id:     prodState.selectedSystem.id
+    system_id:     prodState.selectedSystem.id,
+    stage_id:      stageVal
   };
   if (imageUrl) data.image_url = imageUrl;
 
@@ -1989,7 +2123,7 @@ async function saveCategory() {
 
   if (res.error) { errEl.textContent = res.error.message; errEl.classList.remove('hidden'); return; }
   closeCategoryModal();
-  prodShowCategories(prodState.selectedSystem);
+  prodShowSystem(prodState.selectedSystem);
 }
 
 async function deleteCategory(id) {
@@ -1997,7 +2131,7 @@ async function deleteCategory(id) {
   await db.from('products').delete().eq('category_id', id);
   var res = await db.from('categories').delete().eq('id', id);
   if (res.error) { alert('Delete failed: ' + res.error.message); return; }
-  prodShowCategories(prodState.selectedSystem);
+  prodShowSystem(prodState.selectedSystem);
 }
 
 // ── Product Modal ──────────────────────────────────────────────
