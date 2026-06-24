@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Windy Hill Metal Sales — Shop</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <style>
+    :root { --rust: #7a3020; --navy: #1a2d4f; --bg: #f5f0eb; }
+    body { background-color: var(--bg); }
+    .btn-rust { background-color: var(--rust); color: #fff; }
+    .btn-rust:hover { background-color: #63271a; }
+    .btn-navy { background-color: var(--navy); color: #fff; }
+    .btn-navy:hover { background-color: #12203a; }
+    .spinner { border: 3px solid #e5e7eb; border-top-color: var(--rust); border-radius: 50%; width: 40px; height: 40px; animation: spin 0.8s linear infinite; margin: 0 auto; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    /* Mobile cart slide-up */
+    #mobile-cart-overlay { transition: opacity 0.2s; }
+    #mobile-cart-drawer { transition: transform 0.25s ease; transform: translateY(0); }
+    #mobile-cart-overlay.hidden #mobile-cart-drawer { transform: translateY(100%); }
+    /* Prevent iOS auto-zoom on input focus (requires font-size >= 16px) */
+    @media (max-width: 767px) {
+      input[type="number"], input[type="text"], input[type="email"],
+      input[type="tel"], input[type="password"], select, textarea {
+        font-size: 16px !important;
+      }
+    }
+    /* Product card rows */
+    .product-card { cursor: pointer; transition: background 0.12s; }
+    .product-card:hover { background: #f9f7f5; }
+    .product-card:active { background: #f0ede9; }
+    /* Mode select cards */
+    .mode-card { transition: border-color 0.15s, box-shadow 0.15s; }
+    .mode-card:hover { border-color: var(--rust); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    /* Config modal bottom-sheet on mobile */
+    #product-config-modal > div {
+      max-height: 92vh;
+    }
+    @media (max-width: 639px) {
+      #product-config-modal { align-items: flex-end; }
+      #product-config-modal > div { border-radius: 1.25rem 1.25rem 0 0; max-height: 94vh; }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- MAINTENANCE MODE OVERLAY -->
+  <div id="maintenance-screen" class="hidden fixed inset-0 z-50 flex items-center justify-center" style="background:#f5f0eb">
+    <div class="text-center px-8">
+      <div class="text-6xl mb-6">🔧</div>
+      <h1 class="text-3xl font-bold mb-3" style="color:#1a2d4f">We'll Be Right Back</h1>
+      <p class="text-gray-500 text-lg mb-2">Our shop is temporarily down for maintenance.</p>
+      <p class="text-gray-500">In the meantime, call us at <strong>(765) 847-1480</strong></p>
+    </div>
+  </div>
+
+  <!-- HEADER / NAV -->
+  <header id="site-header" class="absolute top-0 left-0 right-0 z-40 transition-all duration-300" style="background:transparent;">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-20">
+      <a href="#" class="flex items-center gap-3" onclick="goHome(event)">
+        <img src="The Contracting Company_No Background.png" alt="The Contracting Company logo" class="h-14 w-auto flex-shrink-0">
+        <div class="flex flex-col leading-tight">
+          <span id="header-name" class="font-bold text-base transition-colors duration-300" style="color:#fff">The Contracting Company</span>
+          <span id="header-sub" class="text-xs font-medium tracking-wide transition-colors duration-300" style="color:rgba(255,255,255,0.8)">METAL ROOFING MATERIALS</span>
+        </div>
+      </a>
+      <nav id="site-nav" class="hidden md:flex items-center gap-8 text-sm font-medium" style="color:rgba(255,255,255,0.9)">
+        <a href="#" onclick="goHome(event)" class="hover:text-white transition-colors">Home</a>
+        <a href="#" class="hover:text-white transition-colors">About</a>
+        <a href="#" onclick="goHome(event)" class="hover:text-white transition-colors">Shop</a>
+        <a href="tel:7658471480" class="hover:text-white transition-colors">Contact</a>
+        <div class="relative" id="account-nav">
+          <a id="account-nav-link" href="windy-hill-account.html" class="hover:text-white transition-colors">Sign In</a>
+          <div id="account-nav-dropdown" class="hidden absolute right-0 top-6 bg-white border border-gray-200 rounded-lg shadow-lg py-1 w-40 z-50">
+            <a href="windy-hill-account.html" class="block px-4 py-2 text-sm hover:bg-gray-50">View Orders</a>
+            <button onclick="configSignOut()" class="block w-full text-left px-4 py-2 text-sm hover:bg-gray-50 text-red-600">Log Out</button>
+          </div>
+        </div>
+      </nav>
+      <button id="view-cart-btn" onclick="scrollToCart()"
+        class="btn-navy text-sm font-semibold px-4 py-2 rounded transition-colors hidden">
+        View Cart
+      </button>
+    </div>
+  </header>
+
+  <!-- LOADING STATE -->
+  <div id="loading-screen" class="flex-1 flex items-center justify-center py-24">
+    <div class="text-center">
+      <div class="spinner mb-4"></div>
+      <p class="text-gray-500 text-sm">Loading catalog…</p>
+    </div>
+  </div>
+
+  <!-- ERROR STATE -->
+  <div id="error-screen" class="hidden flex-1 flex items-center justify-center py-24">
+    <div class="text-center px-8 max-w-md">
+      <div class="text-5xl mb-4">⚠️</div>
+      <h2 class="text-xl font-bold text-gray-800 mb-2">Unable to Load</h2>
+      <p class="text-gray-500 mb-6">We couldn't load the product catalog. Please check your connection and try again, or call <strong>(765) 847-1480</strong> to order by phone.</p>
+      <button onclick="location.reload()" class="btn-rust px-6 py-2 rounded font-semibold transition-colors">Try Again</button>
+    </div>
+  </div>
+
+  <!-- ENTRY SCREEN -->
+  <div id="entry-screen" class="hidden flex-1 flex flex-col">
+    <!-- Hero Banner -->
+    <div class="relative w-full flex items-center" style="min-height:240px; background:#1a2d4f;">
+      <div class="absolute inset-0 bg-cover bg-center" style="background-image:url('wh-hero.jpg');"></div>
+      <div class="absolute inset-0 bg-black bg-opacity-55"></div>
+      <div class="relative z-10 px-8 md:px-16 pt-24 pb-10 md:py-16">
+        <h1 class="text-3xl md:text-4xl font-extrabold text-white tracking-tight mb-3">PREMIUM ROOF MATERIALS</h1>
+        <p class="text-gray-200 text-base md:text-lg max-w-xl">
+          Shop our complete selection of metal panels, trim pieces, fasteners, and sealants for your home and farm.
+        </p>
+      </div>
+    </div>
+
+    <!-- Products Section -->
+    <div class="flex-1 py-12 px-4 sm:px-8">
+      <h2 class="text-center font-extrabold text-sm mb-10" style="color:#7a3020; letter-spacing:0.2em;">OUR PRODUCTS</h2>
+      <div id="system-cards" class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- Skeleton placeholders while loading -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden animate-pulse">
+          <div class="bg-gray-200 h-64 w-full"></div>
+          <div class="p-6">
+            <div class="h-5 bg-gray-200 rounded w-3/4 mb-3"></div>
+            <div class="h-3 bg-gray-100 rounded w-full mb-2"></div>
+            <div class="h-3 bg-gray-100 rounded w-5/6 mb-6"></div>
+            <div class="h-10 bg-gray-200 rounded w-32"></div>
+          </div>
+        </div>
+        <div class="bg-white rounded-lg shadow-md overflow-hidden animate-pulse">
+          <div class="bg-gray-200 h-64 w-full"></div>
+          <div class="p-6">
+            <div class="h-5 bg-gray-200 rounded w-3/4 mb-3"></div>
+            <div class="h-3 bg-gray-100 rounded w-full mb-2"></div>
+            <div class="h-3 bg-gray-100 rounded w-5/6 mb-6"></div>
+            <div class="h-10 bg-gray-200 rounded w-32"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contractor Hover import section -->
+      <div id="hover-entry-section" class="max-w-5xl mx-auto mt-10">
+        <div class="flex items-center gap-4 mb-4">
+          <div class="flex-1 h-px bg-gray-200"></div>
+          <span class="text-xs font-semibold tracking-widest text-gray-400 uppercase">For Contractors</span>
+          <div class="flex-1 h-px bg-gray-200"></div>
+        </div>
+        <div class="flex flex-col sm:flex-row items-center gap-4 bg-white border border-gray-200 rounded-xl px-6 py-5">
+          <div class="flex-1">
+            <div class="font-semibold text-gray-800 mb-1">Import Hover Report</div>
+            <div class="text-sm text-gray-500">Upload your Hover PDF and we'll build your full material list automatically.</div>
+          </div>
+          <button id="hover-import-btn" onclick="openHoverWizard()"
+            class="flex-shrink-0 flex items-center gap-2 border-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors"
+            style="border-color:#1a2d4f;color:#1a2d4f;background:#fff;">
+            📄 Import Hover Report →
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODE SELECT SCREEN -->
+  <div id="mode-select-screen" class="hidden flex-1 flex flex-col">
+    <div class="bg-white border-b border-gray-200 px-4 sm:px-8 py-3 flex items-center justify-between">
+      <h2 id="mode-select-title" class="text-base font-bold uppercase tracking-widest" style="color:#1a2d4f"></h2>
+      <button onclick="goHome(event)" class="text-sm text-gray-500 hover:text-gray-800 font-medium transition-colors">← Back</button>
+    </div>
+    <div class="flex-1 py-10 px-4 sm:px-8">
+      <div class="max-w-2xl mx-auto">
+        <h2 class="text-2xl font-extrabold text-center mb-2" style="color:#1a2d4f">What are you shopping for?</h2>
+        <p class="text-sm text-gray-500 text-center mb-8">Choose your experience to get started.</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <button onclick="selectMode('complete')" class="mode-card text-left bg-white rounded-2xl border-2 border-gray-200 p-6 shadow-sm">
+            <div class="text-4xl mb-4">🏗️</div>
+            <div class="font-extrabold text-lg mb-2" style="color:#1a2d4f">Complete Roof System</div>
+            <div class="text-sm text-gray-500 mb-6">Step-by-step guide through your full roof build — from decking to fasteners. Required and recommended items are highlighted.</div>
+            <span class="btn-rust inline-flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-semibold">Get Started →</span>
+          </button>
+          <button onclick="selectMode('alacarte')" class="mode-card text-left bg-white rounded-2xl border-2 border-gray-200 p-6 shadow-sm">
+            <div class="text-4xl mb-4">🛒</div>
+            <div class="font-extrabold text-lg mb-2" style="color:#1a2d4f">À La Carte</div>
+            <div class="text-sm text-gray-500 mb-6">Browse and order exactly what you need. Perfect for repairs, upgrades, or single items — no required/recommended flags.</div>
+            <span class="btn-rust inline-flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-semibold">Browse Catalog →</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HOVER WIZARD MODAL -->
+  <div id="hover-wizard" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background:rgba(0,0,0,0.7)">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+
+      <!-- Modal header -->
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        <div>
+          <div class="text-xs font-semibold tracking-widest text-gray-400 uppercase mb-0.5">Import Hover Report</div>
+          <div id="hover-step-label" class="text-sm font-semibold text-gray-700">Step 1 of 4</div>
+        </div>
+        <!-- Step progress dots -->
+        <div class="flex items-center gap-2 mr-4">
+          <div id="hw-dot-1" class="w-2.5 h-2.5 rounded-full transition-colors" style="background:#1a2d4f"></div>
+          <div id="hw-dot-2" class="w-2.5 h-2.5 rounded-full bg-gray-200 transition-colors"></div>
+          <div id="hw-dot-3" class="w-2.5 h-2.5 rounded-full bg-gray-200 transition-colors"></div>
+          <div id="hw-dot-4" class="w-2.5 h-2.5 rounded-full bg-gray-200 transition-colors"></div>
+        </div>
+        <button onclick="closeHoverWizard()" class="text-gray-400 hover:text-gray-700 text-2xl leading-none">&times;</button>
+      </div>
+
+      <!-- Step panels -->
+      <div class="flex-1 overflow-y-auto">
+
+        <!-- Step 1: Upload -->
+        <div id="hover-step-1" class="px-6 py-8">
+          <div id="hover-drop-zone"
+            class="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center cursor-pointer hover:border-gray-400 transition-colors"
+            onclick="document.getElementById('hover-file-input').click()"
+            ondragover="event.preventDefault();this.style.borderColor='#1a2d4f'"
+            ondragleave="this.style.borderColor=''"
+            ondrop="event.preventDefault();this.style.borderColor='';handleHoverFileDrop(event)">
+            <div class="text-4xl mb-3">📄</div>
+            <div class="font-semibold text-gray-700 mb-1">Drop your Hover PDF here</div>
+            <div class="text-sm text-gray-400">or click to browse</div>
+            <input id="hover-file-input" type="file" accept=".pdf" class="hidden" onchange="handleHoverFileSelect(event)">
+          </div>
+          <div id="hover-parsing" class="hidden text-center py-6">
+            <div class="inline-block w-8 h-8 border-4 border-gray-200 border-t-gray-600 rounded-full animate-spin mb-3"></div>
+            <div class="text-sm text-gray-600 font-medium">Reading measurements…</div>
+          </div>
+          <div id="hover-parse-err" class="hidden mt-4 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+            <div class="font-semibold mb-1">Couldn't read this PDF automatically.</div>
+            <div class="mb-3">Try a different Hover report, or build your order manually.</div>
+            <button onclick="closeHoverWizard()" class="text-sm font-semibold text-red-700 underline">Build Manually →</button>
+          </div>
+        </div>
+
+        <!-- Step 2: Confirm measurements + select system -->
+        <div id="hover-step-2" class="hidden px-6 py-6">
+          <div class="flex items-center gap-2 mb-5">
+            <span class="text-green-500 font-bold text-lg">✓</span>
+            <span class="font-semibold text-gray-800">Measurements found</span>
+            <span id="hw-property" class="text-sm text-gray-400 ml-2"></span>
+          </div>
+          <div id="hw-measurements-grid" class="grid grid-cols-2 gap-x-8 gap-y-2 text-sm mb-5"></div>
+          <div id="hw-step-flashing-note" class="hidden text-xs text-gray-400 mb-5 bg-gray-50 rounded px-3 py-2"></div>
+          <div class="border-t border-gray-100 pt-5">
+            <div class="font-semibold text-gray-700 mb-3">Which roofing system?</div>
+            <div class="flex gap-4">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="radio" name="hover-system" value="ag-panel" class="accent-navy"> Ag Panel
+              </label>
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="radio" name="hover-system" value="standing-seam" class="accent-navy"> Standing Seam
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3: Run lengths (Ag Panel) OR waste factor (Standing Seam) -->
+        <div id="hover-step-3" class="hidden px-6 py-6">
+          <!-- Ag Panel: facet run lengths -->
+          <div id="hw-facets-section">
+            <p class="text-sm text-gray-600 mb-4">Enter the panel run length for each roof section. Check your Hover diagram for slope measurements.</p>
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="text-left text-xs text-gray-400 uppercase border-b border-gray-100">
+                    <th class="pb-2 pr-4">Facet</th>
+                    <th class="pb-2 pr-4">Area</th>
+                    <th class="pb-2 pr-4">Run Length (inches)</th>
+                    <th class="pb-2">Preview</th>
+                  </tr>
+                </thead>
+                <tbody id="hw-facet-rows"></tbody>
+              </table>
+            </div>
+            <p class="text-xs text-gray-400 mt-3">💡 Same length for multiple sections? Enter once — we'll group matching lengths automatically.</p>
+          </div>
+          <!-- Standing Seam: base coil calc (16" / 1.333 standard) -->
+          <div id="hw-ss-step3" class="hidden">
+            <p class="text-sm text-gray-600 mb-3">Standing Seam coil is ordered by linear feet. Using standard 16" panel width: <strong>ft² ÷ 1.333 = lf of coil</strong>. Select your waste factor on the next step.</p>
+            <div class="bg-gray-50 rounded-lg p-3">
+              <div class="text-xs text-gray-400 mb-1">Base coil needed (before waste)</div>
+              <div class="text-3xl font-bold text-gray-800" id="hw-ss-area-display"></div>
+              <div class="text-sm text-gray-400">linear feet of coil</div>
+            </div>
+            <p class="text-xs text-gray-400 mt-3">Coil is ordered in full coil increments — typically 100–150 lf per coil.</p>
+          </div>
+        </div>
+
+        <!-- Step 4: Waste factor + order preview -->
+        <div id="hover-step-4" class="hidden px-6 py-6">
+          <div class="mb-5">
+            <div class="font-semibold text-gray-700 mb-3">Waste factor for panels:</div>
+            <div class="flex flex-wrap gap-3" id="hw-waste-options">
+              <label class="flex items-center gap-1.5 cursor-pointer text-sm"><input type="radio" name="hover-waste" value="5" class="accent-navy"> +5% <span class="text-gray-400 font-normal">(simple gable)</span></label>
+              <label class="flex items-center gap-1.5 cursor-pointer text-sm"><input type="radio" name="hover-waste" value="7" class="accent-navy"> +7%</label>
+              <label class="flex items-center gap-1.5 cursor-pointer text-sm"><input type="radio" name="hover-waste" value="10" checked class="accent-navy"> +10% <span class="text-gray-400 font-normal">(moderate)</span></label>
+              <label class="flex items-center gap-1.5 cursor-pointer text-sm"><input type="radio" name="hover-waste" value="12" class="accent-navy"> +12%</label>
+              <label class="flex items-center gap-1.5 cursor-pointer text-sm"><input type="radio" name="hover-waste" value="15" class="accent-navy"> +15% <span class="text-gray-400 font-normal">(complex/hips)</span></label>
+            </div>
+            <div id="hw-waste-area" class="mt-2 text-xs text-gray-400"></div>
+          </div>
+          <div class="border-t border-gray-100 pt-5">
+            <div class="font-semibold text-gray-700 mb-3">Your Order Preview</div>
+            <div id="hw-order-preview" class="space-y-2 text-sm"></div>
+          </div>
+          <div class="mt-4 text-xs text-amber-600 bg-amber-50 rounded px-3 py-2">
+            ⚠ Color and gauge required on all items before checkout.
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer nav -->
+      <div class="px-6 py-4 border-t border-gray-100 flex justify-between items-center">
+        <button id="hw-back-btn" onclick="hoverWizardBack()" class="text-sm text-gray-500 hover:text-gray-800 font-medium hidden">← Back</button>
+        <div class="ml-auto flex gap-3">
+          <button id="hw-next-btn" onclick="hoverWizardNext()"
+            class="btn-navy px-5 py-2 rounded-lg text-sm font-semibold transition-colors hidden">
+            Next →
+          </button>
+          <button id="hw-build-btn" onclick="applyHoverAndBuild()"
+            class="btn-rust px-5 py-2 rounded-lg text-sm font-semibold transition-colors hidden">
+            Build My Order →
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONFIGURATOR VIEW (Two-Panel) -->
+  <div id="configurator-view" class="hidden flex-1 flex flex-col">
+    <!-- System breadcrumb bar -->
+    <div class="bg-white border-b border-gray-200 px-4 sm:px-8 py-3 flex items-center justify-between">
+      <h2 id="system-title" class="text-base font-bold uppercase tracking-widest" style="color:#1a2d4f"></h2>
+      <button onclick="goHome(event)"
+        class="text-sm text-gray-500 hover:text-gray-800 font-medium flex items-center gap-1 transition-colors">
+        ← Back to Start
+      </button>
+    </div>
+
+    <!-- Two-panel layout -->
+    <div class="flex-1 flex flex-col md:flex-row max-w-7xl w-full mx-auto md:divide-x divide-gray-200">
+
+      <!-- LEFT: Component Checklist -->
+      <div class="md:w-2/5 lg:w-1/3 flex flex-col bg-white">
+        <div class="px-6 pt-6 pb-3">
+          <h3 id="checklist-heading" class="text-xs font-extrabold uppercase tracking-widest text-gray-400">Component Checklist</h3>
+          <div id="hover-banner" class="hidden mt-3 flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-800">
+            <span class="flex-1">📄 Hover report imported — select color/gauge on each item below to complete your order.</span>
+            <button onclick="dismissHoverBanner()" class="text-amber-500 hover:text-amber-800 font-bold leading-none flex-shrink-0">&times;</button>
+          </div>
+        </div>
+        <div id="checklist-panel" class="flex-1 overflow-y-auto px-4 pb-6"></div>
+      </div>
+
+      <!-- RIGHT: Order Cart (hidden on mobile — use FAB drawer instead) -->
+      <div class="hidden md:flex md:w-3/5 lg:w-2/3 flex-col bg-gray-50">
+        <div class="px-6 pt-6 pb-3">
+          <h3 class="text-xs font-extrabold uppercase tracking-widest text-gray-400">Your Order</h3>
+        </div>
+        <div id="cart-panel" class="flex-1 overflow-y-auto px-6 pb-6"
+          aria-live="polite" aria-label="Order cart">
+        </div>
+        <div id="cart-footer" class="hidden border-t border-gray-200 bg-white px-6 py-5"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MOBILE CART: Floating Action Button -->
+  <div id="mobile-cart-fab" class="md:hidden hidden fixed bottom-4 left-0 right-0 px-4 z-30">
+    <button onclick="showMobileCart()"
+      class="btn-rust w-full py-3 rounded-xl font-semibold text-sm shadow-lg flex items-center justify-between px-5">
+      <span>
+        <svg class="inline w-4 h-4 mr-2 -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.3 5h14.6M17 21a1 1 0 100-2 1 1 0 000 2zM9 21a1 1 0 100-2 1 1 0 000 2z"/>
+        </svg>
+        <span id="mobile-cart-count">0 items</span>
+      </span>
+      <span id="mobile-cart-total-fab" class="font-bold">$0.00</span>
+    </button>
+  </div>
+
+  <!-- MOBILE CART: Slide-up overlay -->
+  <div id="mobile-cart-overlay" class="md:hidden hidden fixed inset-0 z-50 flex flex-col justify-end">
+    <!-- Scrim -->
+    <div class="absolute inset-0 bg-black bg-opacity-50" onclick="hideMobileCart()"></div>
+    <!-- Drawer -->
+    <div id="mobile-cart-drawer" class="relative bg-white rounded-t-2xl shadow-xl flex flex-col max-h-[85vh]">
+      <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+        <h3 class="font-bold text-gray-800">Your Order</h3>
+        <button onclick="hideMobileCart()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+      </div>
+      <div id="mobile-cart-content" class="flex-1 overflow-y-auto px-5 py-4"></div>
+      <div id="mobile-cart-footer" class="border-t border-gray-100 px-5 py-4"></div>
+    </div>
+  </div>
+
+  <!-- CANVAS MODAL — Custom Trim Drawing Tool -->
+  <div id="canvas-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background:rgba(0,0,0,0.7)">
+    <div class="bg-white rounded-xl shadow-2xl flex flex-col overflow-hidden" style="width:860px;max-width:95vw;max-height:90vh">
+      <!-- Toolbar -->
+      <div class="flex flex-wrap items-center gap-1 px-3 py-2 border-b bg-gray-50 flex-shrink-0">
+        <div class="flex items-center gap-1 pr-3 mr-1 border-r border-gray-200">
+          <button id="tool-select" onclick="setCanvasTool('select')" class="canvas-tool-btn px-2 py-1.5 rounded text-xs font-medium border border-gray-300 bg-white hover:bg-gray-100 transition-colors">↖ Select</button>
+          <button id="tool-line"   onclick="setCanvasTool('line')"   class="canvas-tool-btn px-2 py-1.5 rounded text-xs font-medium border border-gray-300 bg-white hover:bg-gray-100 transition-colors">╱ Line</button>
+          <button id="tool-arc"    onclick="setCanvasTool('arc')"    class="canvas-tool-btn px-2 py-1.5 rounded text-xs font-medium border border-gray-300 bg-white hover:bg-gray-100 transition-colors">⌒ Arc</button>
+          <button id="tool-text"   onclick="setCanvasTool('text')"   class="canvas-tool-btn px-2 py-1.5 rounded text-xs font-medium border border-gray-300 bg-white hover:bg-gray-100 transition-colors">T Text</button>
+        </div>
+        <div class="flex items-center gap-1 pr-3 mr-1 border-r border-gray-200">
+          <button id="grid-btn" onclick="toggleCanvasGrid()" class="px-2 py-1.5 rounded text-xs font-medium border border-gray-300 bg-white hover:bg-gray-100 transition-colors">⊞ Grid</button>
+          <select id="canvas-scale" onchange="updateCanvasScale()" class="px-1.5 py-1.5 rounded text-xs border border-gray-300 bg-white">
+            <option value="10">1" = 10px</option>
+            <option value="20">1" = 20px</option>
+            <option value="40">1" = 40px</option>
+          </select>
+        </div>
+        <button onclick="undoCanvas()"  class="px-2 py-1.5 rounded text-xs font-medium border border-gray-300 bg-white hover:bg-gray-100 transition-colors">↩ Undo</button>
+        <button onclick="clearCanvas()" class="px-2 py-1.5 rounded text-xs font-medium border border-gray-300 bg-white hover:bg-gray-100 text-red-600 transition-colors">✕ Clear</button>
+        <div class="flex-1"></div>
+        <div class="flex items-center gap-2">
+          <button onclick="cancelDrawing()" class="px-3 py-1.5 rounded text-xs font-medium text-gray-600 border border-gray-300 hover:bg-gray-50 transition-colors">Cancel</button>
+          <button onclick="saveDrawing()"   class="btn-rust px-3 py-1.5 rounded text-xs font-semibold transition-colors">Save Drawing</button>
+        </div>
+      </div>
+      <!-- Canvas -->
+      <div class="overflow-auto flex-1 p-4 bg-gray-100 flex items-start justify-center">
+        <canvas id="trim-canvas" aria-label="Custom trim drawing tool" role="img" class="shadow border border-gray-200"></canvas>
+      </div>
+      <p class="text-xs text-gray-400 px-4 py-2 border-t bg-gray-50 flex-shrink-0">
+        Line: click &amp; drag · Arc: click start then click end · Text: click to place · Use Select to move objects
+      </p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- SESSION 4 MODALS: Customer Info · Payment · Processing · Success -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+
+  <!-- CUSTOMER INFO MODAL -->
+  <div id="customer-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background:rgba(0,0,0,0.6)">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg flex flex-col max-h-[90vh]">
+      <div class="flex items-center justify-between px-6 py-4 border-b">
+        <h2 class="font-bold text-lg" style="color:#1a2d4f">Your Information</h2>
+        <button onclick="closeCheckoutModals()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+      </div>
+      <div class="flex-1 overflow-y-auto px-6 py-5 space-y-4">
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 mb-1" for="ci-fname">First Name *</label>
+            <input id="ci-fname" type="text" autocomplete="given-name" placeholder="Jane"
+              class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+              aria-describedby="ci-fname-err">
+            <p id="ci-fname-err" class="hidden text-xs text-red-600 mt-1"></p>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 mb-1" for="ci-lname">Last Name *</label>
+            <input id="ci-lname" type="text" autocomplete="family-name" placeholder="Smith"
+              class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+              aria-describedby="ci-lname-err">
+            <p id="ci-lname-err" class="hidden text-xs text-red-600 mt-1"></p>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 mb-1" for="ci-phone">Phone Number *</label>
+          <input id="ci-phone" type="tel" autocomplete="tel" placeholder="(765) 555-0100"
+            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+            aria-describedby="ci-phone-err">
+          <p id="ci-phone-err" class="hidden text-xs text-red-600 mt-1"></p>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 mb-1" for="ci-email">Email Address *</label>
+          <input id="ci-email" type="email" autocomplete="email" placeholder="jane@example.com"
+            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+            aria-describedby="ci-email-err">
+          <p id="ci-email-err" class="hidden text-xs text-red-600 mt-1"></p>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 mb-1" for="ci-jobname">Job Name <span class="font-normal text-gray-400">(optional)</span></label>
+          <input id="ci-jobname" type="text" placeholder="e.g. Smith Barn Roof"
+            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 mb-2">Fulfillment *</label>
+          <div class="flex gap-6" role="radiogroup" aria-label="Fulfillment method">
+            <label class="flex items-center gap-2 cursor-pointer text-sm">
+              <input type="radio" name="ci-fulfillment" value="pickup" checked class="accent-amber-600"> Pickup
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer text-sm">
+              <input type="radio" name="ci-fulfillment" value="delivery" class="accent-amber-600"> Delivery
+            </label>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 mb-1" for="ci-notes">Order Notes <span class="font-normal text-gray-400">(optional)</span></label>
+          <textarea id="ci-notes" rows="3" placeholder="Special instructions, site access info, delivery directions…"
+            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none"></textarea>
+        </div>
+      </div>
+      <div class="px-6 py-4 border-t bg-gray-50 rounded-b-xl">
+        <button onclick="submitCustomerInfo()"
+          class="btn-rust w-full py-3 rounded-lg font-semibold text-sm transition-colors">
+          Continue to Payment →
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAYMENT MODAL -->
+  <div id="payment-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background:rgba(0,0,0,0.6)">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md flex flex-col">
+      <div class="flex items-center justify-between px-6 py-4 border-b">
+        <div>
+          <h2 class="font-bold text-lg" style="color:#1a2d4f">Payment</h2>
+          <p id="payment-amount-label" class="text-sm text-gray-500 mt-0.5"></p>
+        </div>
+        <button onclick="closeCheckoutModals()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+      </div>
+      <div class="px-6 py-5">
+        <!-- No Stripe key fallback -->
+        <div id="payment-no-stripe" class="hidden text-center py-4">
+          <div class="text-3xl mb-3">📞</div>
+          <p class="font-semibold text-gray-800 mb-1">Online payment is not yet configured.</p>
+          <p class="text-sm text-gray-500 mb-5">Please call <strong>(765) 847-1480</strong> to place your order, or submit below to log the order without payment.</p>
+          <button onclick="runCheckoutProcessing()"
+            class="btn-navy w-full py-3 rounded-lg font-semibold text-sm transition-colors">
+            Submit Order (No Payment)
+          </button>
+        </div>
+        <!-- Stripe Elements -->
+        <div id="payment-stripe-wrap">
+          <p class="text-xs text-gray-500 mb-3">Card details are secured by Stripe — we never store your card number.</p>
+          <div id="stripe-card-element" class="border border-gray-300 rounded-lg p-3 mb-2"></div>
+          <p id="stripe-card-error" class="text-xs text-red-600 min-h-[1rem] mb-3"></p>
+          <button id="pay-btn" onclick="submitPayment()"
+            class="btn-rust w-full py-3 rounded-lg font-semibold text-sm transition-colors">
+            Pay <span id="pay-btn-amount"></span>
+          </button>
+        </div>
+      </div>
+      <div class="px-6 pb-4 text-center">
+        <button onclick="showCustomerInfoModal()" class="text-xs text-gray-400 hover:text-gray-600 underline">← Edit contact info</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROCESSING MODAL -->
+  <div id="processing-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background:rgba(0,0,0,0.7)">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm px-8 py-10 text-center">
+      <div class="spinner mb-6 mx-auto"></div>
+      <h2 class="font-bold text-lg mb-6" style="color:#1a2d4f">Processing your order…</h2>
+      <div class="space-y-3 text-left">
+        <div id="proc-step-1" class="flex items-center gap-3 text-sm text-gray-500">
+          <span class="proc-icon w-5 h-5 flex-shrink-0">○</span>
+          <span>Uploading your specifications</span>
+        </div>
+        <div id="proc-step-2" class="flex items-center gap-3 text-sm text-gray-500">
+          <span class="proc-icon w-5 h-5 flex-shrink-0">○</span>
+          <span>Preparing your work order</span>
+        </div>
+        <div id="proc-step-3" class="flex items-center gap-3 text-sm text-gray-500">
+          <span class="proc-icon w-5 h-5 flex-shrink-0">○</span>
+          <span>Notifying your driver</span>
+        </div>
+        <div id="proc-step-4" class="flex items-center gap-3 text-sm text-gray-500">
+          <span class="proc-icon w-5 h-5 flex-shrink-0">○</span>
+          <span>Sending your confirmation</span>
+        </div>
+      </div>
+      <p id="proc-error" class="hidden mt-5 text-sm text-red-600 bg-red-50 rounded-lg px-4 py-3"></p>
+      <button id="proc-retry-btn" onclick="retryCheckout()" class="hidden mt-4 btn-rust w-full py-2 rounded-lg text-sm font-semibold">Try Again</button>
+    </div>
+  </div>
+
+  <!-- SUCCESS MODAL -->
+  <div id="success-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background:rgba(0,0,0,0.7)">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg flex flex-col max-h-[90vh]">
+      <div class="px-6 pt-8 pb-4 text-center border-b relative">
+        <button onclick="closeCheckoutModals()" class="absolute top-3 right-4 text-gray-400 hover:text-gray-600 text-2xl font-light leading-none" aria-label="Close">&times;</button>
+        <div class="text-5xl mb-3">✅</div>
+        <h2 class="font-extrabold text-xl" style="color:#1a2d4f">Order Confirmed!</h2>
+        <p id="success-order-number" class="text-2xl font-bold mt-1" style="color:#7a3020"></p>
+        <p id="success-email-note" class="text-sm text-gray-500 mt-2"></p>
+      </div>
+      <div class="flex-1 overflow-y-auto px-6 py-4">
+        <h3 class="text-xs font-extrabold uppercase tracking-widest text-gray-400 mb-3">Order Summary</h3>
+        <div id="success-line-items" class="space-y-2 text-sm"></div>
+        <div class="border-t border-gray-200 mt-3 pt-3 flex justify-between font-bold text-sm">
+          <span>Total</span>
+          <span id="success-total" style="color:#1a2d4f"></span>
+        </div>
+      </div>
+      <!-- Account creation prompt -->
+      <div id="success-account-prompt" class="border-t border-gray-100 px-6 py-4 bg-gray-50">
+        <p class="text-sm font-semibold text-gray-700 mb-1">Save this order to your account</p>
+        <p class="text-xs text-gray-500 mb-3">Create a password to track this order and view past orders.</p>
+        <div id="success-account-form" class="space-y-2">
+          <input id="acc-email-display" type="email" disabled
+            class="w-full border border-gray-200 bg-gray-100 rounded-lg px-3 py-2 text-sm text-gray-500">
+          <input id="acc-password" type="password" placeholder="Choose a password (min 8 chars)"
+            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+            aria-describedby="acc-password-err">
+          <p id="acc-password-err" class="hidden text-xs text-red-600"></p>
+          <button onclick="createAccount()" class="btn-navy w-full py-2 rounded-lg text-sm font-semibold transition-colors">
+            Create Account
+          </button>
+          <p id="acc-success-msg" class="hidden text-xs text-green-600 font-medium text-center"></p>
+        </div>
+        <button onclick="skipAccount()" id="skip-account-btn" class="mt-2 w-full text-xs text-gray-400 hover:text-gray-600 underline">
+          No thanks, skip
+        </button>
+      </div>
+      <div class="px-6 py-4 border-t">
+        <button onclick="startNewOrder()" class="btn-rust w-full py-3 rounded-lg font-semibold text-sm transition-colors">
+          Start a New Order
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRODUCT CONFIG MODAL (bottom-sheet mobile / centered desktop) -->
+  <div id="product-config-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center sm:p-4" style="background:rgba(0,0,0,0.65)">
+    <div class="bg-white w-full sm:rounded-2xl sm:max-w-lg flex flex-col shadow-2xl">
+      <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 flex-shrink-0">
+        <div class="flex items-center gap-2 min-w-0">
+          <span id="pcm-badge" class="text-xs font-semibold px-1.5 py-0.5 rounded flex-shrink-0"></span>
+          <span id="pcm-title" class="font-bold text-gray-800 text-base truncate"></span>
+        </div>
+        <button onclick="closeConfigModal()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none ml-3 flex-shrink-0">&times;</button>
+      </div>
+      <div id="pcm-body" class="flex-1 overflow-y-auto"></div>
+    </div>
+  </div>
+
+  <!-- ABOUT MODAL -->
+  <div id="about-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background:rgba(0,0,0,0.65)">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[85vh] flex flex-col">
+      <div class="flex items-center justify-between px-6 py-4 border-b">
+        <h2 id="about-title" class="font-bold text-lg" style="color:#1a2d4f"></h2>
+        <button onclick="closeAboutModal()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+      </div>
+      <div id="about-body" class="flex-1 overflow-y-auto px-6 py-5 text-sm text-gray-700 space-y-4"></div>
+    </div>
+  </div>
+
+  <!-- GALLERY MODAL -->
+  <div id="gallery-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background:rgba(0,0,0,0.82)">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
+      <div class="flex items-center justify-between px-6 py-4 border-b">
+        <h2 id="gallery-title" class="font-bold text-lg" style="color:#1a2d4f"></h2>
+        <button onclick="closeGalleryModal()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+      </div>
+      <div id="gallery-body" class="flex-1 overflow-y-auto px-6 py-5"></div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer style="background:#1a2d4f;" class="text-white px-6 py-5 flex items-center justify-between mt-auto">
+    <span class="text-sm text-gray-300">&copy; <span id="footer-year"></span> Windy Hill Metals</span>
+    <span class="text-xs font-semibold tracking-widest text-gray-400">STRUCTTECH LLC</span>
+  </footer>
+
+  <script src="windy-hill-configurator.js"></script>
+</body>
+</html>

@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Account — The Contracting Company</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root { --rust: #7a3020; --navy: #1a2d4f; --bg: #f5f0eb; }
+    body { background-color: var(--bg); font-family: system-ui, sans-serif; }
+    .btn-navy { background-color: var(--navy); color: #fff; }
+    .btn-navy:hover { background-color: #12203a; }
+    .btn-rust { background-color: var(--rust); color: #fff; }
+    .btn-rust:hover { background-color: #5e2318; }
+    .tab-auth { cursor: pointer; padding: 0.5rem 1.25rem; font-size: 0.875rem; font-weight: 600; border-bottom: 2px solid transparent; color: #6b7280; transition: all 0.15s; }
+    .tab-auth.active { color: var(--navy); border-bottom-color: var(--navy); }
+    .status-pending    { background: #fef3c7; color: #92400e; }
+    .status-sent_to_driver { background: #dbeafe; color: #1e40af; }
+    .status-fulfilled  { background: #d1fae5; color: #065f46; }
+    .status-cancelled  { background: #f3f4f6; color: #6b7280; }
+    .order-row { transition: box-shadow 0.15s; }
+    .order-row:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .detail-panel { position: fixed; right: 0; top: 0; bottom: 0; width: 460px; max-width: 100vw; background: #fff; box-shadow: -4px 0 24px rgba(0,0,0,0.12); transform: translateX(100%); transition: transform 0.25s ease; z-index: 50; overflow-y: auto; }
+    .detail-panel.open { transform: translateX(0); }
+    .step-line { flex: 1; height: 2px; background: #e5e7eb; margin: 0 4px; }
+    .step-line.done { background: #10b981; }
+    @media (max-width: 480px) { .detail-panel { width: 100vw; } }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="bg-white border-b border-gray-200 sticky top-0 z-40">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16">
+      <a href="/" class="flex items-center gap-3">
+        <img src="The Contracting Company_No Background.png" alt="The Contracting Company logo" class="h-12 w-auto flex-shrink-0">
+        <div class="flex flex-col leading-tight">
+          <span class="font-bold text-base" style="color:#1a2d4f">The Contracting Company</span>
+          <span class="text-xs font-medium tracking-wide" style="color:#7a3020">METAL ROOFING MATERIALS</span>
+        </div>
+      </a>
+      <nav class="hidden sm:flex items-center gap-6 text-sm font-medium text-gray-600">
+        <a href="/" class="hover:text-gray-900 transition-colors">Home</a>
+        <a href="/" class="hover:text-gray-900 transition-colors">Shop</a>
+        <a href="tel:7658471480" class="hover:text-gray-900 transition-colors">Contact</a>
+      </nav>
+      <button id="header-signout-btn" onclick="signOut()" class="hidden text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
+        Log Out
+      </button>
+    </div>
+  </header>
+
+  <!-- AUTH SCREEN -->
+  <div id="auth-screen" class="hidden min-h-screen flex items-center justify-center px-4 py-12">
+    <div class="bg-white rounded-2xl shadow-lg w-full max-w-sm p-8">
+      <div class="text-center mb-6">
+        <img src="The Contracting Company_No Background.png" alt="The Contracting Company" class="h-14 w-auto mx-auto mb-2">
+        <div class="font-bold text-xl mb-1" style="color:#1a2d4f">The Contracting Company</div>
+        <div class="text-xs font-semibold tracking-widest mb-4" style="color:#7a3020">MY ACCOUNT</div>
+      </div>
+
+      <!-- Auth tabs -->
+      <div id="forgot-pw-section" class="hidden">
+        <p class="text-sm text-gray-600 mb-3">Enter your email and we'll send a reset link.</p>
+        <input id="forgot-email" type="email" placeholder="Email" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-3"
+          aria-describedby="forgot-err">
+        <div id="forgot-err" class="hidden text-xs text-red-600 mb-2"></div>
+        <div id="forgot-ok" class="hidden text-xs text-green-600 mb-2">Check your email for a reset link.</div>
+        <button onclick="sendResetEmail()" class="btn-navy w-full py-2 rounded-lg text-sm font-semibold mb-3">Send Reset Link</button>
+        <button onclick="showForgot(false)" class="text-sm text-gray-500 hover:text-gray-800 w-full text-center">← Back to login</button>
+      </div>
+
+      <div id="auth-tabs-section">
+        <div class="flex border-b border-gray-200 mb-5">
+          <button id="tab-login-btn" class="tab-auth active" onclick="switchAuthTab('login')">Log In</button>
+          <button id="tab-signup-btn" class="tab-auth" onclick="switchAuthTab('signup')">Create Account</button>
+        </div>
+
+        <!-- Login form -->
+        <div id="login-form">
+          <div class="space-y-3">
+            <div>
+              <input id="login-email" type="email" placeholder="Email" autocomplete="email"
+                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                aria-describedby="login-err" onkeydown="if(event.key==='Enter')doLogin()">
+            </div>
+            <div>
+              <input id="login-password" type="password" placeholder="Password" autocomplete="current-password"
+                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                aria-describedby="login-err" onkeydown="if(event.key==='Enter')doLogin()">
+            </div>
+            <div id="login-err" class="hidden text-xs text-red-600"></div>
+            <button onclick="doLogin()" class="btn-rust w-full py-2 rounded-lg text-sm font-semibold">Sign In</button>
+            <button onclick="showForgot(true)" class="text-xs text-gray-400 hover:text-gray-600 w-full text-center mt-1">Forgot password?</button>
+          </div>
+        </div>
+
+        <!-- Signup form -->
+        <div id="signup-form" class="hidden">
+          <div class="space-y-3">
+            <div>
+              <input id="signup-email" type="email" placeholder="Email" autocomplete="email"
+                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                aria-describedby="signup-err" onkeydown="if(event.key==='Enter')doSignup()">
+            </div>
+            <div>
+              <input id="signup-password" type="password" placeholder="Password" autocomplete="new-password"
+                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                aria-describedby="signup-err" onkeydown="if(event.key==='Enter')doSignup()">
+            </div>
+            <div>
+              <input id="signup-confirm" type="password" placeholder="Confirm Password" autocomplete="new-password"
+                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                aria-describedby="signup-err" onkeydown="if(event.key==='Enter')doSignup()">
+            </div>
+            <div id="signup-err" class="hidden text-xs text-red-600"></div>
+            <div id="signup-ok" class="hidden text-xs text-green-600">Check your email to confirm your account.</div>
+            <button onclick="doSignup()" class="btn-rust w-full py-2 rounded-lg text-sm font-semibold">Create Account</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PORTAL (logged-in) -->
+  <div id="portal-screen" class="hidden max-w-3xl mx-auto px-4 sm:px-6 py-10">
+
+    <!-- Welcome bar -->
+    <div class="flex items-center justify-between mb-8">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900">My Orders</h1>
+        <p id="portal-email" class="text-sm text-gray-500 mt-0.5"></p>
+      </div>
+      <button onclick="signOut()" class="text-sm text-gray-500 hover:text-gray-800 transition-colors">Log Out</button>
+    </div>
+
+    <!-- New order CTA -->
+    <a href="/" class="inline-flex items-center gap-2 btn-navy px-4 py-2 rounded-lg text-sm font-semibold mb-6 transition-colors">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      Place New Order
+    </a>
+
+    <!-- Order list -->
+    <div id="orders-loading" class="text-sm text-gray-400 py-8 text-center">Loading orders…</div>
+    <div id="orders-empty" class="hidden text-sm text-gray-500 py-12 text-center">
+      No orders yet. <a href="/" class="text-blue-600 underline">Place your first order →</a>
+    </div>
+    <div id="orders-list" aria-live="polite" class="space-y-3"></div>
+
+    <!-- Account settings -->
+    <div class="mt-12 bg-white rounded-xl border border-gray-200 p-6">
+      <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">Account Settings</h2>
+      <p class="text-sm text-gray-500 mb-4">Logged in as <strong id="settings-email" class="text-gray-800"></strong></p>
+      <div id="change-pw-section" class="hidden space-y-3 mb-4">
+        <input id="new-password" type="password" placeholder="New Password"
+          class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+        <input id="confirm-new-password" type="password" placeholder="Confirm New Password"
+          class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+        <div id="change-pw-err" class="hidden text-xs text-red-600"></div>
+        <div id="change-pw-ok" class="hidden text-xs text-green-600">Password updated.</div>
+        <div class="flex gap-2">
+          <button onclick="doChangePassword()" class="btn-navy px-4 py-2 rounded-lg text-sm font-semibold">Update Password</button>
+          <button onclick="toggleChangePw(false)" class="text-sm text-gray-500 hover:text-gray-800 px-3 py-2">Cancel</button>
+        </div>
+      </div>
+      <button id="show-change-pw-btn" onclick="toggleChangePw(true)" class="text-sm text-blue-600 hover:underline">Change Password</button>
+    </div>
+  </div>
+
+  <!-- ORDER DETAIL PANEL -->
+  <div id="detail-panel" class="detail-panel" role="dialog" aria-label="Order detail">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white z-10">
+      <h2 class="font-semibold text-gray-800" id="detail-order-num">Order Detail</h2>
+      <button onclick="closeDetail()" class="text-gray-400 hover:text-gray-700 text-xl leading-none">&times;</button>
+    </div>
+    <div id="detail-body" class="px-6 py-5 text-sm text-gray-700"></div>
+  </div>
+  <div id="detail-overlay" onclick="closeDetail()" class="hidden fixed inset-0 bg-black bg-opacity-30 z-40"></div>
+
+  <footer class="text-center text-xs text-gray-400 py-8 mt-12">
+    &copy; 2026 The Contracting Company &bull; <a href="tel:7658471480" class="hover:underline">(765) 847-1480</a>
+  </footer>
+
+  <script>
+    var db = supabase.createClient(
+      'https://gnjpxtxufklhakobgzqv.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImduanB4dHh1ZmtsaGFrb2JnenF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1NTk2MTgsImV4cCI6MjA5NzEzNTYxOH0.Z_kveDZp4Zi7SV4pl_6UJ3yx1vpsbDv75KP0HkW3cDU'
+    );
+
+    var currentUser = null;
+    var myOrders = [];
+
+    // ── Init ───────────────────────────────────────────────────
+    (async function init() {
+      var r = await db.auth.getSession();
+      if (r.data && r.data.session) {
+        showPortal(r.data.session.user);
+      } else {
+        showAuthScreen();
+      }
+
+      db.auth.onAuthStateChange(function(event, session) {
+        if (session) {
+          showPortal(session.user);
+        } else {
+          showAuthScreen();
+        }
+      });
+    })();
+
+    // ── Auth screen / portal toggling ─────────────────────────
+    function showAuthScreen() {
+      currentUser = null;
+      document.getElementById('auth-screen').classList.remove('hidden');
+      document.getElementById('portal-screen').classList.add('hidden');
+      document.getElementById('header-signout-btn').classList.add('hidden');
+    }
+
+    function showPortal(user) {
+      currentUser = user;
+      document.getElementById('auth-screen').classList.add('hidden');
+      document.getElementById('portal-screen').classList.remove('hidden');
+      document.getElementById('header-signout-btn').classList.remove('hidden');
+      var emailEl = document.getElementById('portal-email');
+      var settingsEmailEl = document.getElementById('settings-email');
+      if (emailEl) emailEl.textContent = user.email;
+      if (settingsEmailEl) settingsEmailEl.textContent = user.email;
+      loadMyOrders(user);
+    }
+
+    async function signOut() {
+      await db.auth.signOut();
+    }
+
+    // ── Auth tab switch ────────────────────────────────────────
+    function switchAuthTab(tab) {
+      document.getElementById('login-form').classList.toggle('hidden', tab !== 'login');
+      document.getElementById('signup-form').classList.toggle('hidden', tab !== 'signup');
+      document.getElementById('tab-login-btn').classList.toggle('active', tab === 'login');
+      document.getElementById('tab-signup-btn').classList.toggle('active', tab === 'signup');
+    }
+
+    function showForgot(show) {
+      document.getElementById('forgot-pw-section').classList.toggle('hidden', !show);
+      document.getElementById('auth-tabs-section').classList.toggle('hidden', show);
+    }
+
+    // ── Login ──────────────────────────────────────────────────
+    async function doLogin() {
+      var email = document.getElementById('login-email').value.trim();
+      var password = document.getElementById('login-password').value;
+      var errEl = document.getElementById('login-err');
+      errEl.classList.add('hidden');
+      if (!email || !password) { showErr(errEl, 'Please enter email and password.'); return; }
+      var r = await db.auth.signInWithPassword({ email: email, password: password });
+      if (r.error) { showErr(errEl, r.error.message); return; }
+    }
+
+    // ── Signup ─────────────────────────────────────────────────
+    async function doSignup() {
+      var email    = document.getElementById('signup-email').value.trim();
+      var password = document.getElementById('signup-password').value;
+      var confirm  = document.getElementById('signup-confirm').value;
+      var errEl    = document.getElementById('signup-err');
+      var okEl     = document.getElementById('signup-ok');
+      errEl.classList.add('hidden');
+      okEl.classList.add('hidden');
+      if (!email)    { showErr(errEl, 'Email is required.'); return; }
+      if (password.length < 8) { showErr(errEl, 'Password must be at least 8 characters.'); return; }
+      if (password !== confirm) { showErr(errEl, 'Passwords do not match.'); return; }
+      var r = await db.auth.signUp({ email: email, password: password });
+      if (r.error) { showErr(errEl, r.error.message); return; }
+      okEl.classList.remove('hidden');
+    }
+
+    // ── Forgot password ────────────────────────────────────────
+    async function sendResetEmail() {
+      var email = document.getElementById('forgot-email').value.trim();
+      var errEl = document.getElementById('forgot-err');
+      var okEl  = document.getElementById('forgot-ok');
+      errEl.classList.add('hidden');
+      okEl.classList.add('hidden');
+      if (!email) { showErr(errEl, 'Enter your email address.'); return; }
+      var r = await db.auth.resetPasswordForEmail(email, {
+        redirectTo: 'https://shop.thecontractingcompany.com/account'
+      });
+      if (r.error) { showErr(errEl, r.error.message); return; }
+      okEl.classList.remove('hidden');
+    }
+
+    // ── Change password ────────────────────────────────────────
+    function toggleChangePw(show) {
+      document.getElementById('change-pw-section').classList.toggle('hidden', !show);
+      document.getElementById('show-change-pw-btn').classList.toggle('hidden', show);
+      document.getElementById('change-pw-err').classList.add('hidden');
+      document.getElementById('change-pw-ok').classList.add('hidden');
+    }
+
+    async function doChangePassword() {
+      var pw  = document.getElementById('new-password').value;
+      var pw2 = document.getElementById('confirm-new-password').value;
+      var errEl = document.getElementById('change-pw-err');
+      var okEl  = document.getElementById('change-pw-ok');
+      errEl.classList.add('hidden');
+      okEl.classList.add('hidden');
+      if (pw.length < 8) { showErr(errEl, 'Password must be at least 8 characters.'); return; }
+      if (pw !== pw2) { showErr(errEl, 'Passwords do not match.'); return; }
+      var r = await db.auth.updateUser({ password: pw });
+      if (r.error) { showErr(errEl, r.error.message); return; }
+      okEl.classList.remove('hidden');
+      document.getElementById('new-password').value = '';
+      document.getElementById('confirm-new-password').value = '';
+    }
+
+    // ── Orders ─────────────────────────────────────────────────
+    async function loadMyOrders(user) {
+      document.getElementById('orders-loading').classList.remove('hidden');
+      document.getElementById('orders-list').innerHTML = '';
+      document.getElementById('orders-empty').classList.add('hidden');
+
+      var r = await db.from('orders')
+        .select('*, order_line_items(*)')
+        .or('customer_id.eq.' + user.id + ',customer_email.eq.' + user.email)
+        .order('created_at', { ascending: false });
+
+      document.getElementById('orders-loading').classList.add('hidden');
+
+      if (r.error) {
+        document.getElementById('orders-list').innerHTML =
+          '<p class="text-sm text-red-500">Could not load orders. Please try again.</p>';
+        return;
+      }
+
+      myOrders = r.data || [];
+      if (!myOrders.length) {
+        document.getElementById('orders-empty').classList.remove('hidden');
+        return;
+      }
+      renderOrderList(myOrders);
+    }
+
+    function renderOrderList(orders) {
+      var html = '';
+      orders.forEach(function(o, idx) {
+        var status = o.status || 'pending';
+        var total = formatCurrency(o.total_amount);
+        var date = formatDate(o.created_at);
+        html += '<div class="order-row bg-white rounded-xl border border-gray-200 p-5 cursor-pointer" ' +
+          'onclick="openDetail(' + idx + ')" tabindex="0" ' +
+          'onkeydown="if(event.key===\'Enter\'||event.key===\' \')openDetail(' + idx + ')">' +
+          '<div class="flex items-start justify-between gap-4">' +
+            '<div class="flex-1 min-w-0">' +
+              '<div class="flex items-center gap-3 flex-wrap">' +
+                '<span class="font-semibold text-gray-900">#' + esc(o.order_number || String(o.id).slice(0,8)) + '</span>' +
+                '<span class="text-xs font-medium px-2 py-0.5 rounded-full ' + statusClass(status) + '">' + statusLabel(status) + '</span>' +
+              '</div>' +
+              (o.job_name ? '<p class="text-sm text-gray-500 mt-0.5 truncate">Job: ' + esc(o.job_name) + '</p>' : '') +
+              '<p class="text-xs text-gray-400 mt-1">' + date + '</p>' +
+            '</div>' +
+            '<div class="text-right flex-shrink-0">' +
+              '<div class="font-semibold text-gray-900">' + total + '</div>' +
+              '<button class="mt-2 text-xs text-blue-600 hover:underline" onclick="event.stopPropagation();openDetail(' + idx + ')">View Details</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      });
+      document.getElementById('orders-list').innerHTML = html;
+    }
+
+    // ── Order detail panel ─────────────────────────────────────
+    function openDetail(idx) {
+      var o = myOrders[idx];
+      if (!o) return;
+      document.getElementById('detail-order-num').textContent = '#' + (o.order_number || String(o.id).slice(0,8));
+      document.getElementById('detail-body').innerHTML = buildDetailHTML(o);
+      document.getElementById('detail-panel').classList.add('open');
+      document.getElementById('detail-overlay').classList.remove('hidden');
+    }
+
+    function closeDetail() {
+      document.getElementById('detail-panel').classList.remove('open');
+      document.getElementById('detail-overlay').classList.add('hidden');
+    }
+
+    function buildDetailHTML(o) {
+      var status = o.status || 'pending';
+      var html = '';
+
+      // Status timeline
+      var steps = [
+        { key: 'placed',          label: 'Placed' },
+        { key: 'sent_to_driver',  label: 'Driver Notified' },
+        { key: 'fulfilled',       label: 'Fulfilled' }
+      ];
+      var stepIdx = status === 'fulfilled' ? 2 : status === 'sent_to_driver' ? 1 : 0;
+      html += '<div class="flex items-center mb-6">';
+      steps.forEach(function(s, i) {
+        var done = i <= stepIdx && status !== 'cancelled';
+        html += '<div class="flex flex-col items-center">' +
+          '<div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ' +
+          (done ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-400') + '">' + (i + 1) + '</div>' +
+          '<span class="text-xs mt-1 ' + (done ? 'text-gray-700 font-medium' : 'text-gray-400') + '">' + s.label + '</span>' +
+          '</div>';
+        if (i < steps.length - 1) {
+          html += '<div class="step-line' + (i < stepIdx && status !== 'cancelled' ? ' done' : '') + '"></div>';
+        }
+      });
+      html += '</div>';
+
+      if (status === 'cancelled') {
+        html += '<div class="mb-4 px-3 py-2 bg-gray-100 text-gray-500 text-xs rounded">This order was cancelled.</div>';
+      }
+
+      // Info block
+      html += '<div class="space-y-2 mb-6 text-sm">';
+      html += infoRow('Status', '<span class="text-xs font-medium px-2 py-0.5 rounded-full ' + statusClass(status) + '">' + statusLabel(status) + '</span>');
+      html += infoRow('Date', formatDate(o.created_at));
+      if (o.job_name)   html += infoRow('Job', esc(o.job_name));
+      if (o.fulfillment_method) html += infoRow('Fulfillment', o.fulfillment_method === 'delivery' ? 'Delivery' : 'Pickup');
+      if (o.order_notes) html += infoRow('Notes', esc(o.order_notes));
+      html += '</div>';
+
+      // Line items
+      var items = o.order_line_items || [];
+      if (items.length) {
+        html += '<h3 class="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Line Items</h3>';
+        html += '<div class="border border-gray-100 rounded-lg overflow-hidden mb-6">';
+        items.forEach(function(item, i) {
+          html += '<div class="px-4 py-3 ' + (i % 2 === 0 ? 'bg-gray-50' : 'bg-white') + '">' +
+            '<div class="flex justify-between gap-2">' +
+              '<div class="flex-1 text-sm text-gray-800">' + esc(item.description || item.product_name || '—') + '</div>' +
+              '<div class="text-sm font-medium text-gray-900 whitespace-nowrap">' + formatCurrency(item.line_total || item.amount) + '</div>' +
+            '</div>' +
+            (item.specs_summary ? '<div class="text-xs text-gray-400 mt-0.5">' + esc(item.specs_summary) + '</div>' : '') +
+          '</div>';
+        });
+        html += '</div>';
+      }
+
+      // Total
+      html += '<div class="flex justify-between font-semibold text-gray-900 text-sm border-t border-gray-100 pt-3 mb-6">' +
+        '<span>Order Total</span><span>' + formatCurrency(o.total_amount) + '</span></div>';
+
+      // Spec files
+      if (o.spec_files && o.spec_files.length) {
+        html += '<h3 class="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Uploaded Specs</h3>';
+        html += '<div class="flex flex-wrap gap-2 mb-6">';
+        o.spec_files.forEach(function(f) {
+          html += '<a href="' + esc(f.url || f) + '" target="_blank" class="block w-16 h-16 rounded border border-gray-200 overflow-hidden">' +
+            '<img src="' + esc(f.url || f) + '" class="w-full h-full object-cover" onerror="this.parentElement.innerHTML=\'<div class=&quot;w-full h-full flex items-center justify-center text-xs text-gray-400&quot;>file</div>\'">' +
+            '</a>';
+        });
+        html += '</div>';
+      }
+
+      // Call to modify/cancel
+      html += '<div class="bg-gray-50 rounded-lg p-4 text-sm text-gray-600">' +
+        'Need to modify or cancel? Call us at <a href="tel:7658471480" class="font-medium text-blue-600">(765) 847-1480</a>.' +
+        '</div>';
+
+      return html;
+    }
+
+    function infoRow(label, value) {
+      return '<div class="flex gap-2"><span class="text-gray-400 w-24 flex-shrink-0">' + label + '</span><span class="text-gray-700">' + value + '</span></div>';
+    }
+
+    // ── Helpers ────────────────────────────────────────────────
+    function esc(str) {
+      if (str == null) return '';
+      return String(str)
+        .replace(/&/g,'&amp;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;');
+    }
+
+    function showErr(el, msg) {
+      el.textContent = msg;
+      el.classList.remove('hidden');
+    }
+
+    function formatCurrency(val) {
+      if (val == null) return '—';
+      return '$' + Number(val).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    }
+
+    function formatDate(iso) {
+      if (!iso) return '—';
+      var d = new Date(iso);
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    function statusClass(s) {
+      var map = { pending: 'status-pending', sent_to_driver: 'status-sent_to_driver', fulfilled: 'status-fulfilled', cancelled: 'status-cancelled' };
+      return map[s] || 'status-pending';
+    }
+
+    function statusLabel(s) {
+      var map = { pending: 'Pending', sent_to_driver: 'Driver Notified', fulfilled: 'Fulfilled', cancelled: 'Cancelled' };
+      return map[s] || s;
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,2106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Windy Hill — Admin Panel</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root { --rust: #7a3020; --navy: #1a2d4f; }
+    .btn-rust  { background-color: var(--rust); color: #fff; }
+    .btn-rust:hover  { background-color: #63271a; }
+    .btn-navy  { background-color: var(--navy); color: #fff; }
+    .btn-navy:hover  { background-color: #12203a; }
+    .spinner   { border: 3px solid #e5e7eb; border-top-color: var(--rust); border-radius: 50%; width: 32px; height: 32px; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Sidebar nav */
+    .nav-link  { display: flex; align-items: center; gap: 10px; padding: 8px 14px; border-radius: 8px; font-size: 0.875rem; font-weight: 500; color: #94a3b8; cursor: pointer; transition: all 0.15s; user-select: none; }
+    .nav-link:hover { background: rgba(255,255,255,0.07); color: #fff; }
+    .nav-link.active { background: rgba(255,255,255,0.13); color: #fff; }
+
+    /* Tabs */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* Slide-out */
+    #detail-panel { transform: translateX(100%); transition: transform 0.25s ease; }
+    #detail-panel.open { transform: translateX(0); }
+
+    /* Status badges */
+    .badge-pending      { background:#fef3c7; color:#92400e; }
+    .badge-sent         { background:#dbeafe; color:#1e40af; }
+    .badge-fulfilled    { background:#d1fae5; color:#065f46; }
+
+    /* Order rows */
+    tr.order-row { transition: background 0.1s; cursor: pointer; }
+    tr.order-row:hover { background: #f8fafc; }
+    tr.order-row.selected { background: #eff6ff; }
+
+    /* Stub panels */
+    .stub-panel { background:#fff; border-radius:12px; padding:64px 48px; text-align:center; color:#9ca3af; font-size:0.9rem; box-shadow:0 1px 3px rgba(0,0,0,0.06); }
+    .stub-panel strong { display:block; font-size:1.1rem; color:#6b7280; margin-bottom:6px; }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+
+<!-- ══════════════════════════════════════════════════════════════
+     LOGIN SCREEN
+══════════════════════════════════════════════════════════════ -->
+<div id="login-screen" class="hidden min-h-screen flex items-center justify-center px-4" style="background:#f5f0eb">
+  <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm p-8">
+    <div class="text-center mb-8">
+      <div class="font-extrabold text-2xl tracking-tight" style="color:#1a2d4f">Windy Hill</div>
+      <div class="text-xs font-bold tracking-widest mt-0.5" style="color:#7a3020">METAL SALES · ADMIN</div>
+    </div>
+    <div class="space-y-4">
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1" for="login-email">Email</label>
+        <input id="login-email" type="email" autocomplete="email" placeholder="jacob@structtek.com"
+          class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+          onkeydown="if(event.key==='Enter') adminLogin()">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1" for="login-password">Password</label>
+        <input id="login-password" type="password" autocomplete="current-password" placeholder="••••••••"
+          class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+          onkeydown="if(event.key==='Enter') adminLogin()">
+      </div>
+      <p id="login-error" class="hidden text-xs text-red-600 bg-red-50 rounded px-3 py-2"></p>
+      <button onclick="adminLogin()" id="login-btn"
+        class="btn-rust w-full py-2.5 rounded-lg font-semibold text-sm transition-colors">
+        Sign In
+      </button>
+      <div class="text-center">
+        <button onclick="forgotPassword()" class="text-xs text-gray-400 hover:text-gray-600 underline">
+          Forgot password?
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     ADMIN SHELL
+══════════════════════════════════════════════════════════════ -->
+<div id="admin-shell" class="hidden min-h-screen flex">
+
+  <!-- ── Sidebar ─────────────────────────────────────────────── -->
+  <aside class="flex-shrink-0 flex flex-col" style="width:220px; background:#1a2d4f; min-height:100vh;">
+    <div class="px-5 py-6 border-b border-white border-opacity-10">
+      <div class="font-extrabold text-white text-lg leading-tight tracking-tight">Windy Hill</div>
+      <div class="text-xs font-bold tracking-widest mt-0.5" style="color:#7a3020">METAL SALES</div>
+    </div>
+
+    <nav class="flex-1 px-3 py-4 space-y-0.5">
+      <div class="nav-link active" id="nav-dashboard" onclick="switchTab('dashboard')">
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        Dashboard
+      </div>
+      <div class="nav-link" id="nav-products" onclick="switchTab('products')">
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+        Products
+      </div>
+      <div class="nav-link" id="nav-colors" onclick="switchTab('colors')">
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
+        Colors
+      </div>
+      <div class="nav-link" id="nav-options" onclick="switchTab('options')">
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+        Options
+      </div>
+      <div class="nav-link" id="nav-photos" onclick="switchTab('photos')">
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        Photos
+      </div>
+      <div class="nav-link" id="nav-drivers" onclick="switchTab('drivers')">
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        Drivers
+      </div>
+      <div class="nav-link" id="nav-settings" onclick="switchTab('settings')">
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        Settings
+      </div>
+    </nav>
+
+    <div class="px-3 pb-5 border-t border-white border-opacity-10 pt-3 mt-2">
+      <div id="admin-user-email" class="text-xs text-slate-400 px-3 py-1 truncate"></div>
+      <div class="nav-link mt-1" style="color:#fca5a5" onclick="adminLogout()"
+        onmouseover="this.style.color='#f87171'" onmouseout="this.style.color='#fca5a5'">
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+        Log Out
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── Main ────────────────────────────────────────────────── -->
+  <main class="flex-1 flex flex-col min-w-0">
+
+    <!-- Top bar -->
+    <div class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between flex-shrink-0">
+      <h1 id="page-title" class="text-lg font-bold" style="color:#1a2d4f">Dashboard</h1>
+      <div id="last-updated" class="text-xs text-gray-400"></div>
+    </div>
+
+    <!-- Tab panels -->
+    <div class="flex-1 overflow-y-auto p-6">
+
+      <!-- ── DASHBOARD ──────────────────────────────────────── -->
+      <div id="tab-dashboard" class="tab-panel active">
+
+        <!-- KPI row -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div class="bg-white rounded-xl shadow-sm p-5">
+            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Today's Orders</p>
+            <p id="kpi-today-count" class="text-3xl font-extrabold" style="color:#1a2d4f">—</p>
+          </div>
+          <div class="bg-white rounded-xl shadow-sm p-5">
+            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Today's Revenue</p>
+            <p id="kpi-today-revenue" class="text-3xl font-extrabold" style="color:#7a3020">—</p>
+          </div>
+          <div class="bg-white rounded-xl shadow-sm p-5">
+            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Orders This Week</p>
+            <p id="kpi-week-count" class="text-3xl font-extrabold" style="color:#1a2d4f">—</p>
+          </div>
+          <div class="bg-white rounded-xl shadow-sm p-5">
+            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Total Orders</p>
+            <p id="kpi-total-count" class="text-3xl font-extrabold" style="color:#1a2d4f">—</p>
+          </div>
+        </div>
+
+        <!-- Orders table card -->
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+          <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between gap-4 flex-wrap">
+            <h2 class="font-bold text-gray-800">Orders</h2>
+            <div class="flex items-center gap-3 flex-wrap">
+              <input id="order-search" type="search" placeholder="Name, order #, job…"
+                class="border border-gray-200 rounded-lg px-3 py-1.5 text-sm w-44 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                oninput="filterOrders()">
+              <select id="order-status-filter" onchange="filterOrders()"
+                class="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 bg-white">
+                <option value="">All statuses</option>
+                <option value="pending">Pending</option>
+                <option value="sent-to-driver">Sent to Driver</option>
+                <option value="fulfilled">Fulfilled</option>
+              </select>
+              <button onclick="loadDashboard()"
+                class="text-xs text-gray-400 hover:text-gray-700 flex items-center gap-1 transition-colors">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                Refresh
+              </button>
+            </div>
+          </div>
+
+          <div id="orders-loading" class="py-16 flex justify-center">
+            <div class="spinner"></div>
+          </div>
+          <div id="orders-empty" class="hidden py-16 text-center text-gray-400 text-sm">No orders found.</div>
+
+          <div id="orders-table-wrap" class="hidden overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="border-b border-gray-100 text-xs font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">
+                  <th class="text-left px-5 py-3 whitespace-nowrap">Order #</th>
+                  <th class="text-left px-3 py-3">Customer</th>
+                  <th class="text-left px-3 py-3 hidden md:table-cell">Job</th>
+                  <th class="text-left px-3 py-3 hidden lg:table-cell">System</th>
+                  <th class="text-right px-3 py-3 whitespace-nowrap">Total</th>
+                  <th class="text-left px-3 py-3">Status</th>
+                  <th class="text-center px-3 py-3 hidden sm:table-cell whitespace-nowrap">Webhook</th>
+                  <th class="text-left px-3 py-3 hidden lg:table-cell whitespace-nowrap">Date</th>
+                </tr>
+              </thead>
+              <tbody id="orders-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div><!-- /tab-dashboard -->
+
+      <!-- ── PRODUCTS TAB ──────────────────────────────────── -->
+      <div id="tab-products" class="tab-panel">
+
+        <!-- Breadcrumb -->
+        <div id="prod-breadcrumb" class="flex items-center gap-2 text-sm mb-4 text-gray-500">
+          <button onclick="prodShowSystems()" class="hover:text-gray-800 font-medium transition-colors">Systems</button>
+          <span id="bc-cat-wrap" class="hidden items-center gap-2">
+            <span class="text-gray-300">›</span>
+            <button id="bc-system-btn" onclick="prodShowCategories(prodState.selectedSystem)" class="hover:text-gray-800 transition-colors"></button>
+          </span>
+          <span id="bc-prod-wrap" class="hidden items-center gap-2">
+            <span class="text-gray-300">›</span>
+            <span id="bc-category-label" class="font-semibold text-gray-800"></span>
+          </span>
+        </div>
+
+        <!-- View: Systems -->
+        <div id="prod-view-systems">
+          <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+              <h2 class="font-bold text-gray-800">Systems</h2>
+              <button onclick="openSystemModal(null)" class="btn-rust text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors">+ Add System</button>
+            </div>
+            <div id="systems-loading" class="py-12 flex justify-center"><div class="spinner"></div></div>
+            <div id="systems-list" class="hidden divide-y divide-gray-50"></div>
+          </div>
+        </div>
+
+        <!-- View: Categories -->
+        <div id="prod-view-categories" class="hidden">
+          <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+              <h2 id="cats-title" class="font-bold text-gray-800">Categories</h2>
+              <button onclick="openCategoryModal(null)" class="btn-rust text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors">+ Add Category</button>
+            </div>
+            <div id="cats-loading" class="py-12 flex justify-center"><div class="spinner"></div></div>
+            <div id="cats-list" class="hidden divide-y divide-gray-50"></div>
+          </div>
+        </div>
+
+        <!-- View: Products -->
+        <div id="prod-view-products" class="hidden">
+          <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+              <h2 id="prods-title" class="font-bold text-gray-800">Products</h2>
+              <button onclick="openProductModal(null)" class="btn-rust text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors">+ Add Product</button>
+            </div>
+            <div id="prods-loading" class="py-12 flex justify-center"><div class="spinner"></div></div>
+            <div id="prods-list" class="hidden"></div>
+          </div>
+        </div>
+
+      </div><!-- /tab-products -->
+
+      <!-- ── COLORS TAB ─────────────────────────────────────── -->
+      <div id="tab-colors" class="tab-panel">
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+          <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between flex-wrap gap-3">
+            <h2 class="font-bold text-gray-800">Colors</h2>
+            <button onclick="openColorModal(null)" class="btn-rust text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors">+ Add Color</button>
+          </div>
+          <div id="colors-loading" class="py-12 flex justify-center"><div class="spinner"></div></div>
+          <div id="colors-grid" class="hidden p-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"></div>
+          <div id="colors-empty" class="hidden py-10 text-center text-sm text-gray-400">No colors yet.</div>
+        </div>
+      </div>
+
+      <!-- ── OPTIONS TAB ────────────────────────────────────── -->
+      <div id="tab-options" class="tab-panel space-y-6">
+        <!-- Length Options -->
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+          <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+            <div>
+              <h2 class="font-bold text-gray-800">Length Options</h2>
+              <p class="text-xs text-gray-400 mt-0.5">Available panel lengths shown to customers</p>
+            </div>
+            <button onclick="openLengthModal(null)" class="btn-rust text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors">+ Add Length</button>
+          </div>
+          <div id="lengths-loading" class="py-12 flex justify-center"><div class="spinner"></div></div>
+          <div id="lengths-list" class="hidden divide-y divide-gray-50"></div>
+          <div id="lengths-empty" class="hidden py-10 text-center text-sm text-gray-400">No length options yet.</div>
+        </div>
+        <!-- Finish note -->
+        <div class="bg-blue-50 border border-blue-100 rounded-xl px-5 py-4 text-sm text-blue-700">
+          <strong>Finish (Textured / Smooth / Both)</strong> is managed per product in the Products tab → Edit product → Finish field.
+        </div>
+      </div>
+
+      <!-- ── PHOTOS TAB ──────────────────────────────────────── -->
+      <div id="tab-photos" class="tab-panel space-y-5">
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+          <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between flex-wrap gap-3">
+            <div>
+              <h2 class="font-bold text-gray-800">Photo Library</h2>
+              <p class="text-xs text-gray-400 mt-0.5">Stored in Supabase product-photos bucket</p>
+            </div>
+            <label class="btn-rust text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors cursor-pointer">
+              Upload Photos
+              <input type="file" accept="image/*" multiple class="sr-only" onchange="uploadPhotosFromLibrary(event)">
+            </label>
+          </div>
+          <div id="photos-loading" class="py-12 flex justify-center"><div class="spinner"></div></div>
+          <div id="photos-grid" class="hidden p-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"></div>
+          <div id="photos-empty" class="hidden py-10 text-center text-sm text-gray-400">No photos uploaded yet. Use "Upload Photos" to add some.</div>
+        </div>
+      </div>
+
+      <!-- ── DRIVERS TAB ─────────────────────────────────────── -->
+      <div id="tab-drivers" class="tab-panel">
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+          <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+            <div>
+              <h2 class="font-bold text-gray-800">Drivers</h2>
+              <p class="text-xs text-gray-400 mt-0.5">Only one driver active at a time — active driver receives work orders via Make.com</p>
+            </div>
+            <button onclick="openDriverModal(null)" class="btn-rust text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors">+ Add Driver</button>
+          </div>
+          <div id="drivers-loading" class="py-12 flex justify-center"><div class="spinner"></div></div>
+          <div id="drivers-list" class="hidden divide-y divide-gray-50"></div>
+          <div id="drivers-empty" class="hidden py-10 text-center text-sm text-gray-400">No drivers yet.</div>
+        </div>
+      </div>
+
+      <!-- ── SETTINGS TAB ──────────────────────────────────── -->
+      <div id="tab-settings" class="tab-panel">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-xl font-semibold text-gray-800">Settings</h2>
+          <button onclick="saveAllSettings()" class="btn-primary">Save Changes</button>
+        </div>
+
+        <!-- Save feedback -->
+        <div id="settings-saved-msg" class="hidden mb-4 px-4 py-2 bg-green-50 border border-green-200 text-green-700 rounded text-sm">
+          Settings saved successfully.
+        </div>
+        <div id="settings-error-msg" class="hidden mb-4 px-4 py-2 bg-red-50 border border-red-200 text-red-700 rounded text-sm"></div>
+
+        <!-- Payment -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
+          <div class="px-6 py-4 border-b border-gray-100">
+            <h3 class="font-semibold text-gray-700">Payment (Stripe)</h3>
+          </div>
+          <div class="px-6 py-5 space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Stripe Publishable Key</label>
+              <input id="setting-stripe-key" type="text" placeholder="pk_live_..." class="w-full border border-gray-300 rounded px-3 py-2 text-sm font-mono">
+              <p class="text-xs text-gray-400 mt-1">Safe to expose — used in the customer configurator only. Never enter the secret key here.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Automation -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
+          <div class="px-6 py-4 border-b border-gray-100">
+            <h3 class="font-semibold text-gray-700">Order Automation (Make.com)</h3>
+          </div>
+          <div class="px-6 py-5 space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Webhook URL</label>
+              <input id="setting-webhook-url" type="text" placeholder="https://hook.us1.make.com/..." class="w-full border border-gray-300 rounded px-3 py-2 text-sm font-mono">
+              <p class="text-xs text-gray-400 mt-1">Orders are POSTed here after successful Supabase write. Leave blank to disable automation.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Store -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
+          <div class="px-6 py-4 border-b border-gray-100">
+            <h3 class="font-semibold text-gray-700">Store</h3>
+          </div>
+          <div class="px-6 py-5 space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-sm font-medium text-gray-700">Maintenance Mode</div>
+                <div class="text-xs text-gray-400 mt-0.5">Shows a "closed" screen to customers instead of the configurator.</div>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input id="setting-maintenance" type="checkbox" class="sr-only peer">
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:bg-red-500 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-5"></div>
+              </label>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Maintenance Message</label>
+              <textarea id="setting-maintenance-msg" rows="2" placeholder="We're temporarily closed for updates. Please check back soon." class="w-full border border-gray-300 rounded px-3 py-2 text-sm resize-none"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Driver (read-only info) -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
+          <div class="px-6 py-4 border-b border-gray-100">
+            <h3 class="font-semibold text-gray-700">Active Driver</h3>
+          </div>
+          <div class="px-6 py-5">
+            <p class="text-sm text-gray-500">Active driver is managed in the <button onclick="switchTab('drivers')" class="text-blue-600 underline">Drivers tab</button>.</p>
+            <p class="text-sm text-gray-700 mt-2">Current: <span id="setting-driver-display" class="font-medium text-gray-900">—</span></p>
+          </div>
+        </div>
+
+        <div class="flex justify-end">
+          <button onclick="saveAllSettings()" class="btn-primary">Save Changes</button>
+        </div>
+      </div>
+
+    </div><!-- /tab panels -->
+  </main>
+
+  <!-- ── Order Detail Slide-Out ─────────────────────────────── -->
+  <div id="detail-overlay" class="hidden fixed inset-0 z-40 bg-black bg-opacity-20" onclick="closeOrderDetail()"></div>
+
+  <aside id="detail-panel" class="fixed top-0 right-0 h-full z-50 bg-white shadow-2xl flex flex-col" style="width:440px; max-width:100vw;">
+    <div class="flex items-start justify-between px-5 py-4 border-b flex-shrink-0">
+      <div>
+        <p id="detail-order-num" class="font-bold text-lg leading-tight" style="color:#1a2d4f"></p>
+        <p id="detail-order-meta" class="text-xs text-gray-400 mt-0.5"></p>
+      </div>
+      <button onclick="closeOrderDetail()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none ml-4 mt-0.5">&times;</button>
+    </div>
+    <div id="detail-body" class="flex-1 overflow-y-auto px-5 py-4 space-y-5">
+      <div class="py-12 flex justify-center"><div class="spinner"></div></div>
+    </div>
+  </aside>
+
+  <!-- ── COLOR MODAL ───────────────────────────────────────── -->
+  <div id="color-modal" class="hidden fixed inset-0 z-60 flex items-center justify-center p-4" style="background:rgba(0,0,0,0.55)">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col">
+      <div class="flex items-center justify-between px-6 py-4 border-b">
+        <h2 id="color-modal-title" class="font-bold text-lg" style="color:#1a2d4f">Color</h2>
+        <button onclick="closeColorModal()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+      </div>
+      <div class="px-6 py-5 space-y-4">
+        <input type="hidden" id="clr-id">
+        <div class="grid grid-cols-2 gap-4">
+          <div><label class="modal-label">Name *</label>
+            <input id="clr-name" type="text" placeholder="e.g. Barn Red" class="modal-input"></div>
+          <div><label class="modal-label">Hex Color *</label>
+            <div class="flex gap-2">
+              <input id="clr-hex-pick" type="color" value="#7a3020" class="h-9 w-12 rounded border border-gray-300 cursor-pointer p-0.5" oninput="$('clr-hex-text').value=this.value">
+              <input id="clr-hex-text" type="text" placeholder="#7a3020" class="modal-input flex-1" oninput="syncHexPicker()">
+            </div>
+          </div>
+        </div>
+        <div><label class="modal-label">Swatch Image <span class="font-normal text-gray-400">(optional — overrides hex swatch)</span></label>
+          <div id="clr-img-preview" class="mb-2 hidden"><img id="clr-img-thumb" class="h-16 w-16 rounded-lg object-cover border"></div>
+          <input id="clr-image-file" type="file" accept="image/*" onchange="previewImg(this,'clr-img-thumb','clr-img-preview')" class="text-sm text-gray-600"></div>
+        <div class="grid grid-cols-2 gap-4">
+          <div><label class="modal-label">Display Order</label>
+            <input id="clr-display-order" type="number" class="modal-input"></div>
+          <div class="flex items-end pb-1">
+            <label class="flex items-center gap-2 cursor-pointer text-sm font-medium text-gray-700">
+              <input id="clr-active" type="checkbox" class="w-4 h-4 accent-amber-600"> Active
+            </label>
+          </div>
+        </div>
+        <p id="clr-error" class="hidden text-xs text-red-600"></p>
+      </div>
+      <div class="px-6 py-4 border-t bg-gray-50 flex gap-3 rounded-b-2xl">
+        <button onclick="saveColor()" class="btn-rust flex-1 py-2.5 rounded-lg font-semibold text-sm">Save</button>
+        <button onclick="closeColorModal()" class="flex-1 py-2.5 rounded-lg font-semibold text-sm border border-gray-200 hover:bg-gray-100">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── COLOR → PRODUCT ASSIGNMENT MODAL ──────────────────── -->
+  <div id="color-assign-modal" class="hidden fixed inset-0 z-60 flex items-center justify-center p-4" style="background:rgba(0,0,0,0.55)">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg flex flex-col max-h-[85vh]">
+      <div class="flex items-center justify-between px-6 py-4 border-b">
+        <div>
+          <h2 id="ca-modal-title" class="font-bold text-lg" style="color:#1a2d4f">Assign Color to Products</h2>
+          <p class="text-xs text-gray-400 mt-0.5">Check products that offer this color. Set price modifier (+ or - from base price).</p>
+        </div>
+        <button onclick="closeColorAssignModal()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none ml-4">&times;</button>
+      </div>
+      <div id="ca-list" class="flex-1 overflow-y-auto px-6 py-4 space-y-2">
+        <div class="py-8 flex justify-center"><div class="spinner"></div></div>
+      </div>
+      <div class="px-6 py-4 border-t bg-gray-50 flex gap-3 rounded-b-2xl">
+        <button onclick="saveColorAssignments()" class="btn-rust flex-1 py-2.5 rounded-lg font-semibold text-sm">Save Assignments</button>
+        <button onclick="closeColorAssignModal()" class="flex-1 py-2.5 rounded-lg font-semibold text-sm border border-gray-200 hover:bg-gray-100">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── LENGTH MODAL ───────────────────────────────────────── -->
+  <div id="length-modal" class="hidden fixed inset-0 z-60 flex items-center justify-center p-4" style="background:rgba(0,0,0,0.55)">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm flex flex-col">
+      <div class="flex items-center justify-between px-6 py-4 border-b">
+        <h2 id="len-modal-title" class="font-bold text-lg" style="color:#1a2d4f">Length Option</h2>
+        <button onclick="closeLengthModal()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+      </div>
+      <div class="px-6 py-5 space-y-4">
+        <input type="hidden" id="len-id">
+        <div><label class="modal-label">Label * <span class="font-normal text-gray-400">(shown to customer)</span></label>
+          <input id="len-label" type="text" placeholder="e.g. 12 ft" class="modal-input"></div>
+        <div><label class="modal-label">Value (feet) *</label>
+          <input id="len-value" type="number" step="0.5" min="1" placeholder="12" class="modal-input"></div>
+        <div class="grid grid-cols-2 gap-4">
+          <div><label class="modal-label">Display Order</label>
+            <input id="len-order" type="number" class="modal-input"></div>
+          <div class="flex items-end pb-1">
+            <label class="flex items-center gap-2 cursor-pointer text-sm font-medium text-gray-700">
+              <input id="len-active" type="checkbox" class="w-4 h-4 accent-amber-600"> Active
+            </label>
+          </div>
+        </div>
+        <p id="len-error" class="hidden text-xs text-red-600"></p>
+      </div>
+      <div class="px-6 py-4 border-t bg-gray-50 flex gap-3 rounded-b-2xl">
+        <button onclick="saveLength()" class="btn-rust flex-1 py-2.5 rounded-lg font-semibold text-sm">Save</button>
+        <button onclick="closeLengthModal()" class="flex-1 py-2.5 rounded-lg font-semibold text-sm border border-gray-200 hover:bg-gray-100">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── LENGTH → PRODUCT ASSIGNMENT MODAL ─────────────────── -->
+  <div id="length-assign-modal" class="hidden fixed inset-0 z-60 flex items-center justify-center p-4" style="background:rgba(0,0,0,0.55)">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg flex flex-col max-h-[85vh]">
+      <div class="flex items-center justify-between px-6 py-4 border-b">
+        <div>
+          <h2 id="la-modal-title" class="font-bold text-lg" style="color:#1a2d4f">Assign Length to Products</h2>
+          <p class="text-xs text-gray-400 mt-0.5">Check the panel products that offer this length.</p>
+        </div>
+        <button onclick="closeLengthAssignModal()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none ml-4">&times;</button>
+      </div>
+      <div id="la-list" class="flex-1 overflow-y-auto px-6 py-4 space-y-2">
+        <div class="py-8 flex justify-center"><div class="spinner"></div></div>
+      </div>
+      <div class="px-6 py-4 border-t bg-gray-50 flex gap-3 rounded-b-2xl">
+        <button onclick="saveLengthAssignments()" class="btn-rust flex-1 py-2.5 rounded-lg font-semibold text-sm">Save Assignments</button>
+        <button onclick="closeLengthAssignModal()" class="flex-1 py-2.5 rounded-lg font-semibold text-sm border border-gray-200 hover:bg-gray-100">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── DRIVER MODAL ───────────────────────────────────────── -->
+  <div id="driver-modal" class="hidden fixed inset-0 z-60 flex items-center justify-center p-4" style="background:rgba(0,0,0,0.55)">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm flex flex-col">
+      <div class="flex items-center justify-between px-6 py-4 border-b">
+        <h2 id="drv-modal-title" class="font-bold text-lg" style="color:#1a2d4f">Driver</h2>
+        <button onclick="closeDriverModal()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+      </div>
+      <div class="px-6 py-5 space-y-4">
+        <input type="hidden" id="drv-id">
+        <div><label class="modal-label">Name *</label>
+          <input id="drv-name" type="text" placeholder="John Smith" class="modal-input"></div>
+        <div><label class="modal-label">Email *</label>
+          <input id="drv-email" type="email" placeholder="john@example.com" class="modal-input"></div>
+        <div><label class="modal-label">Phone</label>
+          <input id="drv-phone" type="tel" placeholder="(765) 555-0100" class="modal-input"></div>
+        <p id="drv-error" class="hidden text-xs text-red-600"></p>
+      </div>
+      <div class="px-6 py-4 border-t bg-gray-50 flex gap-3 rounded-b-2xl">
+        <button onclick="saveDriver()" class="btn-rust flex-1 py-2.5 rounded-lg font-semibold text-sm">Save</button>
+        <button onclick="closeDriverModal()" class="flex-1 py-2.5 rounded-lg font-semibold text-sm border border-gray-200 hover:bg-gray-100">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── EDIT SYSTEM MODAL ──────────────────────────────────── -->
+  <div id="system-modal" class="hidden fixed inset-0 z-60 flex items-center justify-center p-4" style="background:rgba(0,0,0,0.55)">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg flex flex-col max-h-[90vh]">
+      <div class="flex items-center justify-between px-6 py-4 border-b">
+        <h2 id="sm-title" class="font-bold text-lg" style="color:#1a2d4f">Edit System</h2>
+        <button onclick="closeSystemModal()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+      </div>
+      <div class="flex-1 overflow-y-auto px-6 py-5 space-y-4">
+        <input type="hidden" id="sm-id">
+        <div><label class="modal-label">Name</label>
+          <input id="sm-name" type="text" class="modal-input"></div>
+        <div><label class="modal-label">Slug <span id="sm-slug-note" class="font-normal text-gray-400">(read-only)</span></label>
+          <input id="sm-slug" type="text" disabled class="modal-input bg-gray-50 text-gray-400" placeholder="e.g. standing-seam"></div>
+        <div><label class="modal-label">Tagline</label>
+          <input id="sm-tagline" type="text" class="modal-input"></div>
+        <div><label class="modal-label">Description</label>
+          <textarea id="sm-description" rows="3" class="modal-input resize-none"></textarea></div>
+        <div><label class="modal-label">Hero Image</label>
+          <div id="sm-img-preview" class="mb-2 hidden"><img id="sm-img-thumb" class="h-24 w-full object-cover rounded-lg border"></div>
+          <input id="sm-image-file" type="file" accept="image/*" onchange="previewImg(this,'sm-img-thumb','sm-img-preview')" class="text-sm text-gray-600">
+          <p class="text-xs text-gray-400 mt-1">Leave empty to keep existing image.</p></div>
+        <div class="flex items-center gap-3">
+          <input id="sm-active" type="checkbox" class="w-4 h-4 accent-amber-600">
+          <label class="text-sm font-medium text-gray-700" for="sm-active">Active (visible to customers)</label>
+        </div>
+      </div>
+      <div class="px-6 pt-4 pb-1 border-t bg-gray-50 rounded-b-2xl">
+        <p id="sm-error" class="hidden text-xs text-red-600 mb-3 p-2 bg-red-50 border border-red-200 rounded"></p>
+        <div class="flex gap-3 pb-4">
+          <button onclick="saveSystem()" class="btn-rust flex-1 py-2.5 rounded-lg font-semibold text-sm transition-colors">Save Changes</button>
+          <button onclick="closeSystemModal()" class="flex-1 py-2.5 rounded-lg font-semibold text-sm border border-gray-200 hover:bg-gray-100 transition-colors">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── EDIT/ADD CATEGORY MODAL ─────────────────────────────── -->
+  <div id="category-modal" class="hidden fixed inset-0 z-60 flex items-center justify-center p-4" style="background:rgba(0,0,0,0.55)">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg flex flex-col max-h-[90vh]">
+      <div class="flex items-center justify-between px-6 py-4 border-b">
+        <h2 id="cm-title" class="font-bold text-lg" style="color:#1a2d4f">Category</h2>
+        <button onclick="closeCategoryModal()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+      </div>
+      <div class="flex-1 overflow-y-auto px-6 py-5 space-y-4">
+        <input type="hidden" id="cm-id">
+        <div class="grid grid-cols-2 gap-4">
+          <div><label class="modal-label">Name *</label>
+            <input id="cm-name" type="text" class="modal-input"></div>
+          <div><label class="modal-label">Slug *</label>
+            <input id="cm-slug" type="text" class="modal-input" placeholder="e.g. ag-ridge-cap"></div>
+        </div>
+        <div><label class="modal-label">Microcopy <span class="font-normal text-gray-400">(helper text in card)</span></label>
+          <textarea id="cm-microcopy" rows="2" class="modal-input resize-none"></textarea></div>
+        <div class="grid grid-cols-2 gap-4">
+          <div><label class="modal-label">Badge</label>
+            <select id="cm-badge" class="modal-input">
+              <option value="REQUIRED">REQUIRED</option>
+              <option value="RECOMMENDED">RECOMMENDED</option>
+              <option value="OPTIONAL">OPTIONAL</option>
+            </select></div>
+          <div><label class="modal-label">Display Order</label>
+            <input id="cm-display-order" type="number" class="modal-input"></div>
+        </div>
+        <div><label class="modal-label">Skip Label <span class="font-normal text-gray-400">(checkbox text)</span></label>
+          <input id="cm-skip-label" type="text" placeholder="e.g. I do not need hip caps" class="modal-input"></div>
+        <div><label class="modal-label">Category Image</label>
+          <div id="cm-img-preview" class="mb-2 hidden"><img id="cm-img-thumb" class="h-24 w-full object-cover rounded-lg border"></div>
+          <input id="cm-image-file" type="file" accept="image/*" onchange="previewImg(this,'cm-img-thumb','cm-img-preview')" class="text-sm text-gray-600">
+          <p class="text-xs text-gray-400 mt-1">Leave empty to keep existing image.</p></div>
+        <div class="flex items-center gap-3">
+          <input id="cm-active" type="checkbox" class="w-4 h-4 accent-amber-600">
+          <label class="text-sm font-medium text-gray-700" for="cm-active">Active</label>
+        </div>
+        <div class="flex items-center gap-3">
+          <input id="cm-required" type="checkbox" class="w-4 h-4 accent-amber-600">
+          <label class="text-sm font-medium text-gray-700" for="cm-required">Required (blocks checkout if pending)</label>
+        </div>
+      </div>
+      <div class="px-6 py-4 border-t bg-gray-50 flex gap-3 rounded-b-2xl">
+        <button onclick="saveCategory()" class="btn-rust flex-1 py-2.5 rounded-lg font-semibold text-sm transition-colors">Save</button>
+        <button onclick="closeCategoryModal()" class="flex-1 py-2.5 rounded-lg font-semibold text-sm border border-gray-200 hover:bg-gray-100 transition-colors">Cancel</button>
+      </div>
+      <p id="cm-error" class="hidden text-xs text-red-600 px-6 pb-4"></p>
+    </div>
+  </div>
+
+  <!-- ── EDIT/ADD PRODUCT MODAL ──────────────────────────────── -->
+  <div id="product-modal" class="hidden fixed inset-0 z-60 flex items-center justify-center p-4" style="background:rgba(0,0,0,0.55)">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg flex flex-col max-h-[90vh]">
+      <div class="flex items-center justify-between px-6 py-4 border-b">
+        <h2 id="pm-title" class="font-bold text-lg" style="color:#1a2d4f">Product</h2>
+        <button onclick="closeProductModal()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+      </div>
+      <div class="flex-1 overflow-y-auto px-6 py-5 space-y-4">
+        <input type="hidden" id="pm-id">
+        <div class="grid grid-cols-2 gap-4">
+          <div><label class="modal-label">Name *</label>
+            <input id="pm-name" type="text" class="modal-input"></div>
+          <div><label class="modal-label">SKU *</label>
+            <input id="pm-sku" type="text" class="modal-input" placeholder="e.g. AGP-29"></div>
+        </div>
+        <div><label class="modal-label">Description</label>
+          <textarea id="pm-description" rows="2" class="modal-input resize-none"></textarea></div>
+        <div class="grid grid-cols-2 gap-4">
+          <div><label class="modal-label">Gauge <span class="font-normal text-gray-400">(optional)</span></label>
+            <input id="pm-gauge" type="text" placeholder="e.g. 29ga" class="modal-input"></div>
+          <div><label class="modal-label">Unit Type</label>
+            <select id="pm-unit-type" class="modal-input">
+              <option value="linear_foot">Linear Foot</option>
+              <option value="each">Each</option>
+              <option value="bag">Bag</option>
+              <option value="roll">Roll</option>
+              <option value="square">Square</option>
+            </select></div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="modal-label">
+              Base Price
+              <span id="pm-price-null-badge" class="hidden ml-1 text-xs font-semibold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">Unpriced</span>
+            </label>
+            <input id="pm-base-price" type="number" step="0.01" min="0" placeholder="0.00"
+              class="modal-input" oninput="updatePriceNullBadge()"></div>
+          <div><label class="modal-label">Finish</label>
+            <select id="pm-finish" class="modal-input">
+              <option value="both">Both (textured &amp; smooth)</option>
+              <option value="textured">Textured only</option>
+              <option value="smooth">Smooth only</option>
+            </select></div>
+        </div>
+        <div><label class="modal-label">Product Image</label>
+          <div id="pm-img-preview" class="mb-2 hidden"><img id="pm-img-thumb" class="h-24 w-full object-cover rounded-lg border"></div>
+          <input id="pm-image-file" type="file" accept="image/*" onchange="previewImg(this,'pm-img-thumb','pm-img-preview')" class="text-sm text-gray-600">
+          <p class="text-xs text-gray-400 mt-1">Leave empty to keep existing image.</p></div>
+        <div class="grid grid-cols-2 gap-4">
+          <div><label class="modal-label">Display Order</label>
+            <input id="pm-display-order" type="number" class="modal-input"></div>
+          <div class="flex items-end pb-1">
+            <label class="flex items-center gap-2 cursor-pointer text-sm font-medium text-gray-700">
+              <input id="pm-active" type="checkbox" class="w-4 h-4 accent-amber-600"> Active
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="px-6 py-4 border-t bg-gray-50 flex gap-3 rounded-b-2xl">
+        <button onclick="saveProduct()" class="btn-rust flex-1 py-2.5 rounded-lg font-semibold text-sm transition-colors">Save</button>
+        <button onclick="closeProductModal()" class="flex-1 py-2.5 rounded-lg font-semibold text-sm border border-gray-200 hover:bg-gray-100 transition-colors">Cancel</button>
+      </div>
+      <p id="pm-error" class="hidden text-xs text-red-600 px-6 pb-4"></p>
+    </div>
+  </div>
+
+</div><!-- /admin-shell -->
+
+<style>
+  .modal-label { display:block; font-size:0.75rem; font-weight:600; color:#4b5563; margin-bottom:4px; }
+  .modal-input { width:100%; border:1px solid #d1d5db; border-radius:8px; padding:8px 12px; font-size:0.875rem; outline:none; }
+  .modal-input:focus { ring: 2px solid #f59e0b; border-color:#f59e0b; }
+  .z-60 { z-index: 60; }
+</style>
+
+<script>
+// ── Supabase ───────────────────────────────────────────────────
+var SUPABASE_URL     = 'https://gnjpxtxufklhakobgzqv.supabase.co';
+var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImduanB4dHh1ZmtsaGFrb2JnenF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1NTk2MTgsImV4cCI6MjA5NzEzNTYxOH0.Z_kveDZp4Zi7SV4pl_6UJ3yx1vpsbDv75KP0HkW3cDU';
+var db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ── State ──────────────────────────────────────────────────────
+var allOrders      = [];
+var filteredOrders = [];
+var currentDetailId = null;
+
+// ── Helpers ────────────────────────────────────────────────────
+function $(id) { return document.getElementById(id); }
+
+function fmt(n) {
+  if (n == null) return '—';
+  return '$' + Number(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+function fmtDate(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function statusBadgeHTML(status) {
+  var map = {
+    'pending':       ['badge-pending',  'Pending'],
+    'sent-to-driver':['badge-sent',     'Sent to Driver'],
+    'fulfilled':     ['badge-fulfilled','Fulfilled']
+  };
+  var pair = map[status] || ['badge-pending', status || 'Pending'];
+  return '<span class="text-xs font-semibold px-2 py-0.5 rounded-full ' + pair[0] + '">' + esc(pair[1]) + '</span>';
+}
+
+function systemLabel(slug) {
+  return slug === 'standing-seam' ? 'Standing Seam' : 'Ag Panel';
+}
+
+// ── Init ───────────────────────────────────────────────────────
+async function init() {
+  var sessionRes = await db.auth.getSession();
+  var session = sessionRes.data && sessionRes.data.session;
+  if (session) {
+    showAdmin(session.user);
+  } else {
+    showLogin();
+  }
+
+  db.auth.onAuthStateChange(function(event, session) {
+    if (event === 'SIGNED_IN' && session)  showAdmin(session.user);
+    if (event === 'SIGNED_OUT')            showLogin();
+  });
+}
+
+function showLogin() {
+  $('login-screen').classList.remove('hidden');
+  $('admin-shell').classList.add('hidden');
+}
+
+function showAdmin(user) {
+  $('login-screen').classList.add('hidden');
+  $('admin-shell').classList.remove('hidden');
+  $('admin-user-email').textContent = user.email;
+  loadDashboard();
+}
+
+// ── Auth ───────────────────────────────────────────────────────
+async function adminLogin() {
+  var email    = $('login-email').value.trim();
+  var password = $('login-password').value;
+  var errEl    = $('login-error');
+  var btn      = $('login-btn');
+
+  errEl.classList.add('hidden');
+  btn.disabled = true;
+  btn.textContent = 'Signing in…';
+
+  var res = await db.auth.signInWithPassword({ email: email, password: password });
+  if (res.error) {
+    errEl.textContent = res.error.message;
+    errEl.classList.remove('hidden');
+    btn.disabled = false;
+    btn.textContent = 'Sign In';
+  }
+}
+
+async function adminLogout() {
+  await db.auth.signOut();
+}
+
+async function forgotPassword() {
+  var email = $('login-email').value.trim();
+  if (!email) { alert('Enter your email address above first.'); return; }
+  var res = await db.auth.resetPasswordForEmail(email);
+  if (res.error) { alert('Error: ' + res.error.message); }
+  else { alert('Password reset email sent to ' + email); }
+}
+
+// ── Tab Switching ──────────────────────────────────────────────
+var TAB_TITLES = {
+  dashboard: 'Dashboard', products: 'Products', colors: 'Colors',
+  options: 'Options', photos: 'Photos', drivers: 'Drivers', settings: 'Settings'
+};
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab-panel').forEach(function(el) { el.classList.remove('active'); });
+  document.querySelectorAll('.nav-link').forEach(function(el)  { el.classList.remove('active'); });
+  $('tab-' + tab).classList.add('active');
+  $('nav-' + tab).classList.add('active');
+  $('page-title').textContent = TAB_TITLES[tab] || tab;
+  closeOrderDetail();
+  if (tab === 'products') onProductsTabOpen();
+  if (tab === 'colors')   onColorsTabOpen();
+  if (tab === 'options')  onOptionsTabOpen();
+  if (tab === 'photos')   onPhotosTabOpen();
+  if (tab === 'drivers')  onDriversTabOpen();
+  if (tab === 'settings') onSettingsTabOpen();
+}
+
+// ── Dashboard ──────────────────────────────────────────────────
+async function loadDashboard() {
+  $('orders-loading').classList.remove('hidden');
+  $('orders-table-wrap').classList.add('hidden');
+  $('orders-empty').classList.add('hidden');
+  $('kpi-today-count').textContent = '—';
+  $('kpi-today-revenue').textContent = '—';
+  $('kpi-week-count').textContent = '—';
+  $('kpi-total-count').textContent = '—';
+
+  await Promise.all([loadKPIs(), loadOrders()]);
+
+  $('last-updated').textContent = 'Updated ' + new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+}
+
+async function loadKPIs() {
+  var now       = new Date();
+  var todayStart = new Date(now); todayStart.setHours(0,0,0,0);
+  var weekStart  = new Date(now); weekStart.setHours(0,0,0,0);
+  // Monday of current week
+  weekStart.setDate(weekStart.getDate() - ((weekStart.getDay() + 6) % 7));
+
+  var todayRes = await db.from('orders').select('order_total').gte('created_at', todayStart.toISOString());
+  var weekRes  = await db.from('orders').select('id', { count: 'exact' }).gte('created_at', weekStart.toISOString());
+  var totalRes = await db.from('orders').select('*', { count: 'exact', head: true });
+
+  var todayOrders  = todayRes.data || [];
+  var todayRevenue = todayOrders.reduce(function(s, o) { return s + (parseFloat(o.order_total) || 0); }, 0);
+
+  $('kpi-today-count').textContent   = todayOrders.length;
+  $('kpi-today-revenue').textContent = fmt(todayRevenue);
+  $('kpi-week-count').textContent    = weekRes.count != null ? weekRes.count : '—';
+  $('kpi-total-count').textContent   = totalRes.count != null ? totalRes.count : '—';
+}
+
+async function loadOrders() {
+  var res = await db.from('orders')
+    .select('id, order_number, customer_name, customer_email, job_name, system, order_total, status, webhook_fired, created_at, fulfillment')
+    .order('created_at', { ascending: false })
+    .limit(200);
+
+  $('orders-loading').classList.add('hidden');
+
+  if (res.error) {
+    $('orders-empty').textContent = 'Failed to load orders: ' + res.error.message;
+    $('orders-empty').classList.remove('hidden');
+    return;
+  }
+
+  allOrders = res.data || [];
+  filterOrders();
+}
+
+function filterOrders() {
+  var search       = ($('order-search').value || '').toLowerCase();
+  var statusFilter = $('order-status-filter').value;
+
+  filteredOrders = allOrders.filter(function(o) {
+    var matchSearch = !search
+      || (o.order_number   || '').toLowerCase().includes(search)
+      || (o.customer_name  || '').toLowerCase().includes(search)
+      || (o.customer_email || '').toLowerCase().includes(search)
+      || (o.job_name       || '').toLowerCase().includes(search);
+    var matchStatus = !statusFilter || o.status === statusFilter;
+    return matchSearch && matchStatus;
+  });
+
+  renderOrders();
+}
+
+function renderOrders() {
+  var tbody = $('orders-tbody');
+
+  if (!filteredOrders.length) {
+    $('orders-table-wrap').classList.add('hidden');
+    $('orders-empty').classList.remove('hidden');
+    return;
+  }
+
+  $('orders-empty').classList.add('hidden');
+  $('orders-table-wrap').classList.remove('hidden');
+
+  tbody.innerHTML = filteredOrders.map(function(o) {
+    var selectedCls = o.id === currentDetailId ? ' selected' : '';
+    var webhookHTML = o.webhook_fired
+      ? '<span class="text-green-600 text-xs font-medium">✅ Fired</span>'
+      : '<span class="text-amber-600 text-xs font-medium">⚠ Not Fired</span>';
+
+    return '<tr class="order-row border-b border-gray-50' + selectedCls + '" onclick="openOrderDetail(\'' + o.id + '\')" data-id="' + o.id + '">' +
+      '<td class="px-5 py-3 font-mono text-xs font-semibold text-gray-700 whitespace-nowrap">' + esc(o.order_number || '—') + '</td>' +
+      '<td class="px-3 py-3">' +
+        '<div class="font-medium text-gray-800 text-sm leading-tight">' + esc(o.customer_name || '—') + '</div>' +
+        '<div class="text-xs text-gray-400 mt-0.5">' + esc(o.customer_email || '') + '</div>' +
+      '</td>' +
+      '<td class="px-3 py-3 text-sm text-gray-500 hidden md:table-cell max-w-[140px] truncate">' + esc(o.job_name || '—') + '</td>' +
+      '<td class="px-3 py-3 hidden lg:table-cell"><span class="text-xs text-gray-500">' + esc(systemLabel(o.system)) + '</span></td>' +
+      '<td class="px-3 py-3 text-right font-semibold text-sm whitespace-nowrap">' + fmt(o.order_total) + '</td>' +
+      '<td class="px-3 py-3" onclick="event.stopPropagation()">' + buildStatusDropdown(o.id, o.status) + '</td>' +
+      '<td class="px-3 py-3 text-center hidden sm:table-cell">' + webhookHTML + '</td>' +
+      '<td class="px-3 py-3 text-xs text-gray-400 whitespace-nowrap hidden lg:table-cell">' + fmtDate(o.created_at) + '</td>' +
+      '</tr>';
+  }).join('');
+}
+
+function buildStatusDropdown(orderId, currentStatus) {
+  var opts = ['pending', 'sent-to-driver', 'fulfilled'];
+  var labels = { 'pending':'Pending', 'sent-to-driver':'Sent to Driver', 'fulfilled':'Fulfilled' };
+  var html = '<select onchange="updateOrderStatus(\'' + orderId + '\', this.value)" ' +
+    'class="text-xs border border-gray-200 rounded-md px-2 py-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-amber-400">';
+  opts.forEach(function(v) {
+    html += '<option value="' + v + '"' + (v === currentStatus ? ' selected' : '') + '>' + labels[v] + '</option>';
+  });
+  return html + '</select>';
+}
+
+async function updateOrderStatus(orderId, newStatus) {
+  var res = await db.from('orders').update({ status: newStatus }).eq('id', orderId);
+  if (res.error) {
+    alert('Failed to update status: ' + res.error.message);
+    return;
+  }
+  var order = allOrders.find(function(o) { return o.id === orderId; });
+  if (order) order.status = newStatus;
+
+  if (currentDetailId === orderId) {
+    var badge = $('detail-status-badge');
+    if (badge) badge.innerHTML = statusBadgeHTML(newStatus);
+  }
+}
+
+// ── Order Detail Slide-Out ─────────────────────────────────────
+async function openOrderDetail(orderId) {
+  currentDetailId = orderId;
+  renderOrders(); // re-render to apply selected highlight
+
+  $('detail-order-num').textContent  = 'Loading…';
+  $('detail-order-meta').textContent = '';
+  $('detail-body').innerHTML = '<div class="py-12 flex justify-center"><div class="spinner"></div></div>';
+  $('detail-panel').classList.add('open');
+  $('detail-overlay').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+
+  var res = await db.from('orders')
+    .select('*, order_line_items(*), spec_files(*)')
+    .eq('id', orderId)
+    .single();
+
+  if (res.error || !res.data) {
+    $('detail-body').innerHTML = '<p class="text-sm text-red-500 text-center py-8">Failed to load order details.</p>';
+    return;
+  }
+
+  var o = res.data;
+  var lineItems = (o.order_line_items || []).sort(function(a,b) { return (a.display_order||0) - (b.display_order||0); });
+  var specFiles = o.spec_files || [];
+
+  $('detail-order-num').textContent  = o.order_number || '—';
+  $('detail-order-meta').textContent = fmtDate(o.created_at) + ' · ' + systemLabel(o.system) + ' · ' + (o.fulfillment || 'pickup');
+
+  var html = '';
+
+  // ── Customer block ──
+  html += section('Customer',
+    '<div class="bg-gray-50 rounded-lg p-3 space-y-2 text-sm">' +
+    infoRow('Name',  esc(o.customer_name || '—')) +
+    infoRow('Phone', '<a href="tel:' + esc(o.customer_phone||'') + '" class="text-blue-600 hover:underline">' + esc(o.customer_phone || '—') + '</a>') +
+    infoRow('Email', '<a href="mailto:' + esc(o.customer_email||'') + '" class="text-blue-600 hover:underline">' + esc(o.customer_email || '—') + '</a>') +
+    (o.job_name ? infoRow('Job', esc(o.job_name)) : '') +
+    infoRow('Fulfillment', '<span class="capitalize">' + esc(o.fulfillment || 'pickup') + '</span>') +
+    '</div>' +
+    (o.order_notes ? '<p class="text-xs text-gray-400 italic mt-2 px-1">"' + esc(o.order_notes) + '"</p>' : '')
+  );
+
+  // ── Status block ──
+  html += section('Status',
+    '<div class="flex items-center gap-3 flex-wrap">' +
+    '<span id="detail-status-badge">' + statusBadgeHTML(o.status) + '</span>' +
+    (o.webhook_fired
+      ? '<span class="text-xs text-green-600 font-medium">✅ Webhook Fired</span>'
+      : '<span class="text-xs text-amber-600 font-medium">⚠ Webhook Not Fired</span>') +
+    '</div>'
+  );
+
+  // ── Line items block ──
+  var liHTML = '';
+  if (lineItems.length) {
+    liHTML += '<div class="space-y-2">';
+    lineItems.forEach(function(item) {
+      var amtText = item.amount != null
+        ? '<span class="font-bold" style="color:#1a2d4f">' + fmt(item.amount) + '</span>'
+        : '<span class="text-xs text-amber-600 font-semibold">Quote Req.</span>';
+      liHTML += '<div class="bg-gray-50 rounded-lg px-3 py-2">' +
+        '<div class="flex justify-between items-start gap-2">' +
+          '<span class="text-sm font-medium text-gray-800 flex-1">' + esc(item.description || '—') + '</span>' +
+          '<span class="flex-shrink-0 text-sm">' + amtText + '</span>' +
+        '</div>' +
+        (item.specs ? '<div class="text-xs text-gray-400 mt-0.5">' + esc(item.specs) + '</div>' : '') +
+        '</div>';
+    });
+    liHTML += '</div>';
+    liHTML += '<div class="flex justify-between font-bold text-sm pt-2 mt-1 border-t border-gray-100 px-1">' +
+      '<span>Total</span><span style="color:#1a2d4f">' + fmt(o.order_total) + '</span></div>';
+  } else {
+    liHTML = '<p class="text-xs text-gray-400">No line items recorded.</p>';
+  }
+  html += section('Line Items', liHTML);
+
+  // ── Spec files block ──
+  if (specFiles.length) {
+    var sfHTML = '<div class="grid grid-cols-3 gap-2">';
+    specFiles.forEach(function(f) {
+      var isPDF = (f.filename || '').toLowerCase().endsWith('.pdf');
+      if (isPDF) {
+        sfHTML += '<a href="' + esc(f.storage_url||'#') + '" target="_blank" rel="noopener" ' +
+          'class="block bg-red-50 border border-red-100 rounded-lg p-3 text-center hover:bg-red-100 transition-colors">' +
+          '<div class="text-red-500 font-bold text-xs mb-1">PDF</div>' +
+          '<div class="text-xs text-gray-500 truncate">' + esc(f.filename||'') + '</div></a>';
+      } else {
+        sfHTML += '<a href="' + esc(f.storage_url||'#') + '" target="_blank" rel="noopener" ' +
+          'class="block rounded-lg overflow-hidden border border-gray-100 hover:opacity-80 transition-opacity">' +
+          '<img src="' + esc(f.storage_url||'') + '" alt="' + esc(f.filename||'') + '" class="w-full h-16 object-cover">' +
+          (f.description ? '<div class="text-xs text-gray-400 px-1 py-0.5 truncate">' + esc(f.description) + '</div>' : '') +
+          '</a>';
+      }
+    });
+    sfHTML += '</div>';
+    html += section('Spec Files (' + specFiles.length + ')', sfHTML);
+  }
+
+  // ── Webhook payload JSON ──
+  if (o.webhook_payload) {
+    html += '<div>' +
+      '<button onclick="togglePayload()" class="text-xs font-extrabold uppercase tracking-widest text-gray-400 hover:text-gray-600 flex items-center gap-1.5 mb-2 transition-colors">' +
+        '<span id="payload-icon">▶</span> Webhook Payload JSON' +
+      '</button>' +
+      '<div id="payload-json" class="hidden bg-gray-900 rounded-xl p-4 overflow-auto max-h-64">' +
+        '<pre class="text-xs text-green-300 whitespace-pre-wrap break-all">' + esc(JSON.stringify(o.webhook_payload, null, 2)) + '</pre>' +
+      '</div>' +
+      '</div>';
+  }
+
+  $('detail-body').innerHTML = html;
+}
+
+function section(title, bodyHTML) {
+  return '<div><h3 class="text-xs font-extrabold uppercase tracking-widest text-gray-400 mb-2">' + title + '</h3>' + bodyHTML + '</div>';
+}
+
+function infoRow(label, valueHTML) {
+  return '<div class="flex justify-between items-baseline gap-2"><span class="text-gray-400 flex-shrink-0">' + label + '</span><span class="font-medium text-gray-800 text-right">' + valueHTML + '</span></div>';
+}
+
+function togglePayload() {
+  var el   = $('payload-json');
+  var icon = $('payload-icon');
+  var hidden = el.classList.toggle('hidden');
+  icon.textContent = hidden ? '▶' : '▼';
+}
+
+function closeOrderDetail() {
+  currentDetailId = null;
+  $('detail-panel').classList.remove('open');
+  $('detail-overlay').classList.add('hidden');
+  document.body.style.overflow = '';
+  document.querySelectorAll('.order-row').forEach(function(r) { r.classList.remove('selected'); });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SESSION 7 — COLORS, OPTIONS, PHOTOS, DRIVERS
+// ═══════════════════════════════════════════════════════════════
+
+// ── Colors ────────────────────────────────────────────────────
+
+var colorsList = [];
+var colorAssignState = { colorId: null, allProducts: [], existing: [] };
+
+async function loadColors() {
+  $('colors-loading').classList.remove('hidden');
+  $('colors-grid').classList.add('hidden');
+  $('colors-empty').classList.add('hidden');
+  var res = await db.from('colors').select('*').order('display_order');
+  $('colors-loading').classList.add('hidden');
+  if (res.error) { alert('Error: ' + res.error.message); return; }
+  colorsList = res.data || [];
+  renderColorsGrid();
+}
+
+function renderColorsGrid() {
+  var el = $('colors-grid');
+  if (!colorsList.length) { $('colors-empty').classList.remove('hidden'); return; }
+  el.innerHTML = colorsList.map(function(c) {
+    var swatch = c.swatch_image_url
+      ? '<img src="' + esc(c.swatch_image_url) + '" class="w-full h-20 object-cover rounded-t-xl">'
+      : '<div class="w-full h-20 rounded-t-xl" style="background:' + esc(c.hex_code||'#ccc') + '"></div>';
+    return '<div class="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">' +
+      swatch +
+      '<div class="p-2">' +
+        '<div class="font-semibold text-xs text-gray-800 truncate">' + esc(c.name) + '</div>' +
+        '<div class="text-xs text-gray-400 font-mono">' + esc(c.hex_code||'') + '</div>' +
+        '<div class="mt-1">' + activeBadge(c.active) + '</div>' +
+        '<div class="flex gap-1 mt-2">' +
+          '<button onclick="openColorAssignModal(\'' + c.id + '\')" class="flex-1 text-xs text-blue-600 border border-blue-100 rounded px-1 py-0.5 hover:bg-blue-50 transition-colors">Assign</button>' +
+          '<button onclick="openColorModal(' + JSON.stringify(c).replace(/"/g,'&quot;') + ')" class="flex-1 text-xs text-gray-500 border border-gray-200 rounded px-1 py-0.5 hover:bg-gray-50 transition-colors">Edit</button>' +
+          '<button onclick="deleteColor(\'' + c.id + '\')" class="text-xs text-red-400 border border-red-100 rounded px-1 py-0.5 hover:bg-red-50 transition-colors">✕</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+  el.classList.remove('hidden');
+}
+
+function openColorModal(color) {
+  var isNew = !color;
+  $('color-modal-title').textContent = isNew ? 'Add Color' : 'Edit Color';
+  $('clr-id').value           = color ? color.id : '';
+  $('clr-name').value         = color ? color.name || '' : '';
+  $('clr-hex-text').value     = color ? color.hex_code || '#000000' : '#000000';
+  $('clr-hex-pick').value     = color ? color.hex_code || '#000000' : '#000000';
+  $('clr-display-order').value = color ? color.display_order || 0 : (colorsList.length + 1);
+  $('clr-active').checked     = color ? !!color.active : true;
+  $('clr-error').classList.add('hidden');
+  var prev = $('clr-img-preview');
+  if (color && color.swatch_image_url) { $('clr-img-thumb').src = color.swatch_image_url; prev.classList.remove('hidden'); }
+  else { prev.classList.add('hidden'); }
+  $('clr-image-file').value = '';
+  $('color-modal').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function syncHexPicker() {
+  var val = $('clr-hex-text').value;
+  if (/^#[0-9a-fA-F]{6}$/.test(val)) $('clr-hex-pick').value = val;
+}
+
+function closeColorModal() {
+  $('color-modal').classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
+async function saveColor() {
+  var id = $('clr-id').value;
+  var errEl = $('clr-error');
+  errEl.classList.add('hidden');
+  var name = $('clr-name').value.trim();
+  var hex  = $('clr-hex-text').value.trim();
+  if (!name) { errEl.textContent = 'Name is required.'; errEl.classList.remove('hidden'); return; }
+
+  var imageUrl = null;
+  var fileInput = $('clr-image-file');
+  if (fileInput.files && fileInput.files[0]) {
+    imageUrl = await uploadProductPhoto(fileInput.files[0], 'colors/' + name.toLowerCase().replace(/\s+/g,'-'));
+    if (!imageUrl) { errEl.textContent = 'Image upload failed.'; errEl.classList.remove('hidden'); return; }
+  }
+
+  var data = { name: name, hex_code: hex, display_order: parseInt($('clr-display-order').value)||0, active: $('clr-active').checked };
+  if (imageUrl) data.swatch_image_url = imageUrl;
+
+  var res = id
+    ? await db.from('colors').update(data).eq('id', id)
+    : await db.from('colors').insert(data);
+  if (res.error) { errEl.textContent = res.error.message; errEl.classList.remove('hidden'); return; }
+  closeColorModal();
+  loadColors();
+}
+
+async function deleteColor(id) {
+  if (!confirm('Delete this color? It will be removed from all product assignments.')) return;
+  await db.from('product_colors').delete().eq('color_id', id);
+  var res = await db.from('colors').delete().eq('id', id);
+  if (res.error) { alert('Delete failed: ' + res.error.message); return; }
+  loadColors();
+}
+
+// Color → Product assignment
+async function openColorAssignModal(colorId) {
+  var color = colorsList.find(function(c) { return c.id === colorId; });
+  colorAssignState.colorId = colorId;
+  $('ca-modal-title').textContent = 'Assign "' + (color ? color.name : '') + '" to Products';
+  $('ca-list').innerHTML = '<div class="py-8 flex justify-center"><div class="spinner"></div></div>';
+  $('color-assign-modal').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+
+  var [prodsRes, existRes] = await Promise.all([
+    db.from('products').select('id, name, sku, categories(name, systems(name))'),
+    db.from('product_colors').select('product_id, price_modifier').eq('color_id', colorId)
+  ]);
+
+  colorAssignState.allProducts = prodsRes.data || [];
+  colorAssignState.existing    = existRes.data || [];
+
+  var existMap = {};
+  colorAssignState.existing.forEach(function(r) { existMap[r.product_id] = r.price_modifier || 0; });
+
+  $('ca-list').innerHTML = colorAssignState.allProducts.map(function(p) {
+    var checked = existMap.hasOwnProperty(p.id) ? 'checked' : '';
+    var mod = existMap[p.id] || 0;
+    var sys = p.categories && p.categories.systems ? p.categories.systems.name : '';
+    var cat = p.categories ? p.categories.name : '';
+    return '<label class="flex items-center gap-3 py-2 cursor-pointer hover:bg-gray-50 rounded px-2 -mx-2">' +
+      '<input type="checkbox" data-pid="' + p.id + '" class="color-assign-cb w-4 h-4 accent-amber-600" ' + checked + '>' +
+      '<div class="flex-1 min-w-0">' +
+        '<span class="text-sm font-medium text-gray-800">' + esc(p.name) + '</span>' +
+        '<span class="text-xs text-gray-400 ml-2">' + esc(sys) + ' › ' + esc(cat) + '</span>' +
+      '</div>' +
+      '<div class="flex items-center gap-1 flex-shrink-0">' +
+        '<span class="text-xs text-gray-400">+$</span>' +
+        '<input type="number" step="0.01" placeholder="0.00" value="' + mod + '" data-pid="' + p.id + '" class="color-assign-mod w-20 border border-gray-200 rounded px-2 py-0.5 text-xs text-right">' +
+      '</div>' +
+    '</label>';
+  }).join('') || '<p class="text-sm text-gray-400 text-center py-4">No products found.</p>';
+}
+
+function closeColorAssignModal() {
+  $('color-assign-modal').classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
+async function saveColorAssignments() {
+  var colorId   = colorAssignState.colorId;
+  var checkboxes = document.querySelectorAll('.color-assign-cb');
+  var toInsert  = [];
+  var checkedIds = [];
+
+  checkboxes.forEach(function(cb) {
+    if (cb.checked) {
+      var pid = cb.dataset.pid;
+      var modInput = document.querySelector('.color-assign-mod[data-pid="' + pid + '"]');
+      var mod = parseFloat((modInput && modInput.value) || 0) || 0;
+      toInsert.push({ color_id: colorId, product_id: pid, price_modifier: mod });
+      checkedIds.push(pid);
+    }
+  });
+
+  // Remove all existing, then re-insert checked ones
+  await db.from('product_colors').delete().eq('color_id', colorId);
+  if (toInsert.length) {
+    var res = await db.from('product_colors').insert(toInsert);
+    if (res.error) { alert('Save failed: ' + res.error.message); return; }
+  }
+  closeColorAssignModal();
+}
+
+// ── Length Options ─────────────────────────────────────────────
+
+var lengthsList = [];
+var lengthAssignState = { lengthId: null, allProducts: [], existing: [] };
+
+async function loadLengths() {
+  $('lengths-loading').classList.remove('hidden');
+  $('lengths-list').classList.add('hidden');
+  $('lengths-empty').classList.add('hidden');
+  var res = await db.from('length_options').select('*').order('display_order');
+  $('lengths-loading').classList.add('hidden');
+  if (res.error) { alert('Error: ' + res.error.message); return; }
+  lengthsList = res.data || [];
+  renderLengthsList();
+}
+
+function renderLengthsList() {
+  var el = $('lengths-list');
+  if (!lengthsList.length) { $('lengths-empty').classList.remove('hidden'); return; }
+  el.innerHTML = lengthsList.map(function(l) {
+    return '<div class="flex items-center gap-4 px-5 py-3 hover:bg-gray-50 transition-colors">' +
+      '<div class="flex-1">' +
+        '<span class="font-semibold text-sm text-gray-800">' + esc(l.label) + '</span>' +
+        '<span class="text-xs text-gray-400 ml-2">' + esc(l.value_ft) + ' ft</span>' +
+      '</div>' +
+      '<div class="flex items-center gap-3">' +
+        activeBadge(l.active) +
+        '<button onclick="openLengthAssignModal(\'' + l.id + '\')" class="text-xs text-blue-600 border border-blue-100 rounded px-2 py-0.5 hover:bg-blue-50 transition-colors">Assign</button>' +
+        '<button onclick="openLengthModal(' + JSON.stringify(l).replace(/"/g,'&quot;') + ')" class="text-xs text-gray-500 border border-gray-200 rounded px-2 py-0.5 hover:bg-gray-50 transition-colors">Edit</button>' +
+        '<button onclick="deleteLength(\'' + l.id + '\')" class="text-xs text-red-400 border border-red-100 rounded px-2 py-0.5 hover:bg-red-50 transition-colors">Del</button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+  el.classList.remove('hidden');
+}
+
+function openLengthModal(len) {
+  var isNew = !len;
+  $('len-modal-title').textContent = isNew ? 'Add Length' : 'Edit Length';
+  $('len-id').value     = len ? len.id : '';
+  $('len-label').value  = len ? len.label || '' : '';
+  $('len-value').value  = len ? len.value_ft || '' : '';
+  $('len-order').value  = len ? len.display_order || 0 : (lengthsList.length + 1);
+  $('len-active').checked = len ? !!len.active : true;
+  $('len-error').classList.add('hidden');
+  $('length-modal').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeLengthModal() {
+  $('length-modal').classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
+async function saveLength() {
+  var id    = $('len-id').value;
+  var errEl = $('len-error');
+  errEl.classList.add('hidden');
+  var label = $('len-label').value.trim();
+  var value = parseFloat($('len-value').value);
+  if (!label || isNaN(value)) { errEl.textContent = 'Label and value (ft) are required.'; errEl.classList.remove('hidden'); return; }
+
+  var data = { label: label, value_ft: value, display_order: parseInt($('len-order').value)||0, active: $('len-active').checked };
+  var res = id
+    ? await db.from('length_options').update(data).eq('id', id)
+    : await db.from('length_options').insert(data);
+  if (res.error) { errEl.textContent = res.error.message; errEl.classList.remove('hidden'); return; }
+  closeLengthModal();
+  loadLengths();
+}
+
+async function deleteLength(id) {
+  if (!confirm('Delete this length option?')) return;
+  await db.from('product_lengths').delete().eq('length_option_id', id);
+  var res = await db.from('length_options').delete().eq('id', id);
+  if (res.error) { alert('Delete failed: ' + res.error.message); return; }
+  loadLengths();
+}
+
+async function openLengthAssignModal(lengthId) {
+  var len = lengthsList.find(function(l) { return l.id === lengthId; });
+  lengthAssignState.lengthId = lengthId;
+  $('la-modal-title').textContent = 'Assign "' + (len ? len.label : '') + '" to Products';
+  $('la-list').innerHTML = '<div class="py-8 flex justify-center"><div class="spinner"></div></div>';
+  $('length-assign-modal').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+
+  var [prodsRes, existRes] = await Promise.all([
+    db.from('products').select('id, name, sku, categories(name, systems(name))'),
+    db.from('product_lengths').select('product_id').eq('length_option_id', lengthId)
+  ]);
+
+  lengthAssignState.allProducts = prodsRes.data || [];
+  lengthAssignState.existing    = existRes.data || [];
+  var existSet = new Set(lengthAssignState.existing.map(function(r) { return r.product_id; }));
+
+  $('la-list').innerHTML = lengthAssignState.allProducts.map(function(p) {
+    var checked = existSet.has(p.id) ? 'checked' : '';
+    var sys = p.categories && p.categories.systems ? p.categories.systems.name : '';
+    var cat = p.categories ? p.categories.name : '';
+    return '<label class="flex items-center gap-3 py-2 cursor-pointer hover:bg-gray-50 rounded px-2 -mx-2">' +
+      '<input type="checkbox" data-pid="' + p.id + '" class="length-assign-cb w-4 h-4 accent-amber-600" ' + checked + '>' +
+      '<div class="min-w-0">' +
+        '<span class="text-sm font-medium text-gray-800">' + esc(p.name) + '</span>' +
+        '<span class="text-xs text-gray-400 ml-2">' + esc(sys) + ' › ' + esc(cat) + '</span>' +
+      '</div>' +
+    '</label>';
+  }).join('') || '<p class="text-sm text-gray-400 text-center py-4">No products found.</p>';
+}
+
+function closeLengthAssignModal() {
+  $('length-assign-modal').classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
+async function saveLengthAssignments() {
+  var lengthId = lengthAssignState.lengthId;
+  var checkboxes = document.querySelectorAll('.length-assign-cb');
+  var toInsert = [];
+  checkboxes.forEach(function(cb) {
+    if (cb.checked) toInsert.push({ length_option_id: lengthId, product_id: cb.dataset.pid });
+  });
+
+  await db.from('product_lengths').delete().eq('length_option_id', lengthId);
+  if (toInsert.length) {
+    var res = await db.from('product_lengths').insert(toInsert);
+    if (res.error) { alert('Save failed: ' + res.error.message); return; }
+  }
+  closeLengthAssignModal();
+}
+
+// ── Photos Library ─────────────────────────────────────────────
+
+var photoFiles = [];
+
+async function loadPhotos() {
+  $('photos-loading').classList.remove('hidden');
+  $('photos-grid').classList.add('hidden');
+  $('photos-empty').classList.add('hidden');
+  photoFiles = [];
+
+  var prefixes = ['', 'systems/', 'categories/', 'products/', 'colors/'];
+  for (var i = 0; i < prefixes.length; i++) {
+    var res = await db.storage.from('product-photos').list(prefixes[i], { limit: 100, sortBy: { column: 'created_at', order: 'desc' } });
+    if (res.data) {
+      res.data.forEach(function(f) {
+        if (!f.id) return; // skip sub-folders
+        var fullPath = prefixes[i] + f.name;
+        var publicUrl = db.storage.from('product-photos').getPublicUrl(fullPath).data.publicUrl;
+        photoFiles.push({ name: f.name, fullPath: fullPath, publicUrl: publicUrl, metadata: f.metadata });
+      });
+    }
+  }
+
+  $('photos-loading').classList.add('hidden');
+  if (!photoFiles.length) { $('photos-empty').classList.remove('hidden'); return; }
+  renderPhotosGrid();
+}
+
+function renderPhotosGrid() {
+  var el = $('photos-grid');
+  el.innerHTML = photoFiles.map(function(f, idx) {
+    return '<div class="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm group">' +
+      '<div class="relative">' +
+        '<img src="' + esc(f.publicUrl) + '" alt="' + esc(f.name) + '" class="w-full h-24 object-cover">' +
+        '<button onclick="deleteLibraryPhoto(\'' + esc(f.fullPath) + '\',' + idx + ')" ' +
+          'class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs leading-none hidden group-hover:flex items-center justify-center hover:bg-red-600 transition-colors">✕</button>' +
+      '</div>' +
+      '<div class="p-2">' +
+        '<p class="text-xs text-gray-500 truncate" title="' + esc(f.fullPath) + '">' + esc(f.name) + '</p>' +
+        '<button onclick="copyPhotoUrl(\'' + esc(f.publicUrl) + '\')" class="mt-1 text-xs text-blue-500 hover:underline">Copy URL</button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+  el.classList.remove('hidden');
+}
+
+async function uploadPhotosFromLibrary(event) {
+  var files = Array.from(event.target.files || []);
+  if (!files.length) return;
+  $('photos-loading').classList.remove('hidden');
+  $('photos-grid').classList.add('hidden');
+  $('photos-empty').classList.add('hidden');
+
+  for (var i = 0; i < files.length; i++) {
+    var file = files[i];
+    var path = 'uploads/' + Date.now() + '-' + file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+    await db.storage.from('product-photos').upload(path, file, { upsert: true });
+  }
+  event.target.value = '';
+  loadPhotos();
+}
+
+async function deleteLibraryPhoto(path, idx) {
+  if (!confirm('Delete "' + path + '"? This may break any product/category using this image.')) return;
+  var res = await db.storage.from('product-photos').remove([path]);
+  if (res.error) { alert('Delete failed: ' + res.error.message); return; }
+  loadPhotos();
+}
+
+function copyPhotoUrl(url) {
+  navigator.clipboard.writeText(url).then(function() {
+    alert('URL copied to clipboard.');
+  });
+}
+
+// ── Drivers ────────────────────────────────────────────────────
+
+var driversList = [];
+
+async function loadDrivers() {
+  $('drivers-loading').classList.remove('hidden');
+  $('drivers-list').classList.add('hidden');
+  $('drivers-empty').classList.add('hidden');
+  var res = await db.from('drivers').select('*').order('created_at');
+  $('drivers-loading').classList.add('hidden');
+  if (res.error) { alert('Error: ' + res.error.message); return; }
+  driversList = res.data || [];
+  renderDriversList();
+}
+
+function renderDriversList() {
+  var el = $('drivers-list');
+  if (!driversList.length) { $('drivers-empty').classList.remove('hidden'); return; }
+  el.innerHTML = driversList.map(function(d) {
+    return '<div class="flex items-center gap-4 px-5 py-4 hover:bg-gray-50 transition-colors">' +
+      '<div class="flex-1 min-w-0">' +
+        '<div class="font-semibold text-sm text-gray-800">' + esc(d.name) + '</div>' +
+        '<div class="text-xs text-gray-400">' + esc(d.email) + (d.phone ? ' · ' + esc(d.phone) : '') + '</div>' +
+      '</div>' +
+      '<div class="flex items-center gap-3 flex-shrink-0">' +
+        (d.active
+          ? '<span class="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full">✓ Active Driver</span>'
+          : '<button onclick="setActiveDriver(\'' + d.id + '\')" class="text-xs text-gray-500 border border-gray-200 rounded-full px-2 py-1 hover:bg-gray-50 transition-colors">Set Active</button>') +
+        '<button onclick="openDriverModal(' + JSON.stringify(d).replace(/"/g,'&quot;') + ')" class="text-xs text-gray-500 border border-gray-200 rounded px-2 py-1 hover:bg-gray-50 transition-colors">Edit</button>' +
+        '<button onclick="deleteDriver(\'' + d.id + '\')" class="text-xs text-red-400 border border-red-100 rounded px-2 py-1 hover:bg-red-50 transition-colors">Del</button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+  el.classList.remove('hidden');
+}
+
+async function setActiveDriver(id) {
+  var driver = driversList.find(function(d) { return d.id === id; });
+  if (!driver) return;
+  // Deactivate all
+  await db.from('drivers').update({ active: false }).neq('id', 'none');
+  // Activate selected
+  await db.from('drivers').update({ active: true }).eq('id', id);
+  // Update app_settings driver_email
+  await db.from('app_settings').update({ value: driver.email }).eq('key', 'driver_email');
+  loadDrivers();
+}
+
+function openDriverModal(driver) {
+  var isNew = !driver;
+  $('drv-modal-title').textContent = isNew ? 'Add Driver' : 'Edit Driver';
+  $('drv-id').value    = driver ? driver.id : '';
+  $('drv-name').value  = driver ? driver.name || '' : '';
+  $('drv-email').value = driver ? driver.email || '' : '';
+  $('drv-phone').value = driver ? driver.phone || '' : '';
+  $('drv-error').classList.add('hidden');
+  $('driver-modal').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeDriverModal() {
+  $('driver-modal').classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
+async function saveDriver() {
+  var id    = $('drv-id').value;
+  var errEl = $('drv-error');
+  errEl.classList.add('hidden');
+  var name  = $('drv-name').value.trim();
+  var email = $('drv-email').value.trim();
+  if (!name || !email) { errEl.textContent = 'Name and email are required.'; errEl.classList.remove('hidden'); return; }
+
+  var data = { name: name, email: email, phone: $('drv-phone').value.trim() || null };
+  var res = id
+    ? await db.from('drivers').update(data).eq('id', id)
+    : await db.from('drivers').insert({ ...data, active: false });
+  if (res.error) { errEl.textContent = res.error.message; errEl.classList.remove('hidden'); return; }
+  closeDriverModal();
+  loadDrivers();
+}
+
+async function deleteDriver(id) {
+  if (!confirm('Delete this driver?')) return;
+  var res = await db.from('drivers').delete().eq('id', id);
+  if (res.error) { alert('Delete failed: ' + res.error.message); return; }
+  loadDrivers();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SESSION 8 — SETTINGS
+// ═══════════════════════════════════════════════════════════════
+
+var settingsData = {};
+
+async function loadSettings() {
+  var r = await db.from('app_settings').select('*');
+  if (r.error) { console.error('loadSettings', r.error); return; }
+  settingsData = {};
+  (r.data || []).forEach(function(row) { settingsData[row.key] = row.value; });
+  renderSettings();
+}
+
+function renderSettings() {
+  var s = settingsData;
+  var stripeEl = document.getElementById('setting-stripe-key');
+  var webhookEl = document.getElementById('setting-webhook-url');
+  var maintEl = document.getElementById('setting-maintenance');
+  var maintMsgEl = document.getElementById('setting-maintenance-msg');
+  var driverEl = document.getElementById('setting-driver-display');
+  if (stripeEl)  stripeEl.value  = s.stripe_publishable_key  || '';
+  if (webhookEl) webhookEl.value = s.make_webhook_url         || '';
+  if (maintEl)   maintEl.checked = (s.maintenance_mode === 'true');
+  if (maintMsgEl) maintMsgEl.value = s.maintenance_message   || '';
+  if (driverEl)  driverEl.textContent = s.driver_email || '(none set)';
+}
+
+async function saveAllSettings() {
+  var stripeKey  = document.getElementById('setting-stripe-key').value.trim();
+  var webhookUrl = document.getElementById('setting-webhook-url').value.trim();
+  var maintenance = document.getElementById('setting-maintenance').checked ? 'true' : 'false';
+  var maintMsg   = document.getElementById('setting-maintenance-msg').value.trim();
+
+  var pairs = [
+    { key: 'stripe_publishable_key', value: stripeKey },
+    { key: 'make_webhook_url',        value: webhookUrl },
+    { key: 'maintenance_mode',        value: maintenance },
+    { key: 'maintenance_message',     value: maintMsg }
+  ];
+
+  var errEl   = document.getElementById('settings-error-msg');
+  var savedEl = document.getElementById('settings-saved-msg');
+  errEl.classList.add('hidden');
+  savedEl.classList.add('hidden');
+
+  for (var i = 0; i < pairs.length; i++) {
+    var p = pairs[i];
+    var r = await db.from('app_settings').upsert({ key: p.key, value: p.value }, { onConflict: 'key' });
+    if (r.error) {
+      errEl.textContent = 'Error saving ' + p.key + ': ' + r.error.message;
+      errEl.classList.remove('hidden');
+      return;
+    }
+    settingsData[p.key] = p.value;
+  }
+
+  savedEl.classList.remove('hidden');
+  setTimeout(function() { savedEl.classList.add('hidden'); }, 3000);
+}
+
+// ── Tab open hooks ─────────────────────────────────────────────
+
+function onColorsTabOpen()  { if (!colorsList.length)  loadColors(); }
+function onOptionsTabOpen() { if (!lengthsList.length)  loadLengths(); }
+function onPhotosTabOpen()  { loadPhotos(); }
+function onDriversTabOpen() { if (!driversList.length)  loadDrivers(); }
+function onSettingsTabOpen() { loadSettings(); }
+
+// ═══════════════════════════════════════════════════════════════
+// SESSION 6 — PRODUCTS MANAGEMENT
+// ═══════════════════════════════════════════════════════════════
+
+var prodState = {
+  view: 'systems',
+  systems: [],
+  categories: [],
+  products: [],
+  selectedSystem: null,
+  selectedCategory: null
+};
+
+// ── Products Tab Entry ─────────────────────────────────────────
+
+function onProductsTabOpen() {
+  if (prodState.systems.length === 0) prodShowSystems();
+}
+
+async function prodShowSystems() {
+  prodState.view = 'systems';
+  prodState.selectedSystem = null;
+  prodState.selectedCategory = null;
+  $('prod-view-systems').classList.remove('hidden');
+  $('prod-view-categories').classList.add('hidden');
+  $('prod-view-products').classList.add('hidden');
+  $('bc-cat-wrap').classList.add('hidden');
+  $('bc-prod-wrap').classList.add('hidden');
+  $('systems-loading').classList.remove('hidden');
+  $('systems-list').classList.add('hidden');
+
+  var res = await db.from('systems').select('*').order('display_order');
+  $('systems-loading').classList.add('hidden');
+  if (res.error) { alert('Error loading systems: ' + res.error.message); return; }
+  prodState.systems = res.data || [];
+  renderSystemsList();
+}
+
+function renderSystemsList() {
+  var el = $('systems-list');
+  el.innerHTML = prodState.systems.map(function(s) {
+    return '<div class="flex items-center gap-4 px-5 py-4 hover:bg-gray-50 transition-colors">' +
+      '<div class="w-16 h-10 flex-shrink-0 rounded overflow-hidden bg-gray-100">' +
+        (s.hero_image_url ? '<img src="' + esc(s.hero_image_url) + '" class="w-full h-full object-cover">' : '<div class="w-full h-full flex items-center justify-center text-gray-300 text-xs">No img</div>') +
+      '</div>' +
+      '<div class="flex-1 min-w-0">' +
+        '<div class="font-semibold text-gray-800">' + esc(s.name) + '</div>' +
+        '<div class="text-xs text-gray-400 truncate">' + esc(s.tagline || '') + '</div>' +
+      '</div>' +
+      '<div class="flex items-center gap-3 flex-shrink-0">' +
+        activeBadge(s.active) +
+        '<button onclick="prodShowCategories(' + JSON.stringify(s).replace(/"/g,'&quot;') + ')" class="text-xs text-blue-600 hover:underline font-medium">Categories →</button>' +
+        '<button onclick="openSystemModal(' + JSON.stringify(s).replace(/"/g,'&quot;') + ')" class="text-xs text-gray-500 hover:text-gray-800 border border-gray-200 rounded px-2 py-1 hover:bg-gray-50 transition-colors">Edit</button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+  el.classList.remove('hidden');
+}
+
+// ── Categories View ────────────────────────────────────────────
+
+async function prodShowCategories(system) {
+  prodState.selectedSystem = system;
+  prodState.selectedCategory = null;
+  prodState.view = 'categories';
+  $('prod-view-systems').classList.add('hidden');
+  $('prod-view-categories').classList.remove('hidden');
+  $('prod-view-products').classList.add('hidden');
+  $('bc-cat-wrap').classList.remove('hidden');
+  $('bc-cat-wrap').style.display = 'inline-flex';
+  $('bc-system-btn').textContent = system.name;
+  $('bc-prod-wrap').classList.add('hidden');
+  $('cats-title').textContent = system.name + ' — Categories';
+  $('cats-loading').classList.remove('hidden');
+  $('cats-list').classList.add('hidden');
+
+  var res = await db.from('categories').select('*').eq('system_id', system.id).order('display_order');
+  $('cats-loading').classList.add('hidden');
+  if (res.error) { alert('Error: ' + res.error.message); return; }
+  prodState.categories = res.data || [];
+  renderCategoriesList();
+}
+
+function renderCategoriesList() {
+  var el = $('cats-list');
+  var BADGE_COLORS = { REQUIRED:'bg-red-100 text-red-700', RECOMMENDED:'bg-amber-100 text-amber-700', OPTIONAL:'bg-gray-100 text-gray-500' };
+  el.innerHTML = prodState.categories.map(function(c) {
+    return '<div class="flex items-center gap-4 px-5 py-3 hover:bg-gray-50 transition-colors">' +
+      '<div class="w-14 h-9 flex-shrink-0 rounded overflow-hidden bg-gray-100">' +
+        (c.image_url ? '<img src="' + esc(c.image_url) + '" class="w-full h-full object-cover">' : '<div class="w-full h-full flex items-center justify-center text-gray-300 text-xs">—</div>') +
+      '</div>' +
+      '<div class="flex-1 min-w-0">' +
+        '<div class="flex items-center gap-2">' +
+          '<span class="font-medium text-sm text-gray-800">' + esc(c.name) + '</span>' +
+          '<span class="text-xs font-semibold px-1.5 py-0.5 rounded ' + (BADGE_COLORS[c.badge]||'bg-gray-100 text-gray-500') + '">' + esc(c.badge||'') + '</span>' +
+        '</div>' +
+        '<div class="text-xs text-gray-400 truncate">' + esc(c.microcopy || '') + '</div>' +
+      '</div>' +
+      '<div class="flex items-center gap-3 flex-shrink-0">' +
+        activeBadge(c.active) +
+        '<button onclick="prodShowProducts(' + JSON.stringify(c).replace(/"/g,'&quot;') + ')" class="text-xs text-blue-600 hover:underline font-medium">Products →</button>' +
+        '<button onclick="openCategoryModal(' + JSON.stringify(c).replace(/"/g,'&quot;') + ')" class="text-xs text-gray-500 hover:text-gray-800 border border-gray-200 rounded px-2 py-1 hover:bg-gray-50 transition-colors">Edit</button>' +
+        '<button onclick="deleteCategory(\'' + c.id + '\')" class="text-xs text-red-400 hover:text-red-600 border border-red-100 rounded px-2 py-1 hover:bg-red-50 transition-colors">Del</button>' +
+      '</div>' +
+    '</div>';
+  }).join('') || '<div class="px-5 py-8 text-sm text-gray-400 text-center">No categories yet. Add one above.</div>';
+  el.classList.remove('hidden');
+}
+
+// ── Products View ──────────────────────────────────────────────
+
+async function prodShowProducts(category) {
+  prodState.selectedCategory = category;
+  prodState.view = 'products';
+  $('prod-view-systems').classList.add('hidden');
+  $('prod-view-categories').classList.add('hidden');
+  $('prod-view-products').classList.remove('hidden');
+  $('bc-cat-wrap').classList.remove('hidden');
+  $('bc-cat-wrap').style.display = 'inline-flex';
+  $('bc-prod-wrap').classList.remove('hidden');
+  $('bc-prod-wrap').style.display = 'inline-flex';
+  $('bc-category-label').textContent = category.name;
+  $('prods-title').textContent = category.name + ' — Products';
+  $('prods-loading').classList.remove('hidden');
+  $('prods-list').classList.add('hidden');
+
+  var res = await db.from('products').select('*').eq('category_id', category.id).order('display_order');
+  $('prods-loading').classList.add('hidden');
+  if (res.error) { alert('Error: ' + res.error.message); return; }
+  prodState.products = res.data || [];
+  renderProductsList();
+}
+
+function renderProductsList() {
+  var el = $('prods-list');
+  if (!prodState.products.length) {
+    el.innerHTML = '<div class="px-5 py-8 text-sm text-gray-400 text-center">No products yet. Add one above.</div>';
+    el.classList.remove('hidden');
+    return;
+  }
+  el.innerHTML = '<div class="overflow-x-auto"><table class="w-full text-sm">' +
+    '<thead><tr class="border-b border-gray-100 text-xs font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">' +
+      '<th class="text-left px-5 py-3">Name</th>' +
+      '<th class="text-left px-3 py-3">SKU</th>' +
+      '<th class="text-left px-3 py-3">Gauge</th>' +
+      '<th class="text-left px-3 py-3">Unit</th>' +
+      '<th class="text-left px-3 py-3">Finish</th>' +
+      '<th class="text-right px-3 py-3">Price</th>' +
+      '<th class="text-center px-3 py-3">Active</th>' +
+      '<th class="px-3 py-3"></th>' +
+    '</tr></thead>' +
+    '<tbody>' +
+    prodState.products.map(function(p) {
+      var priceCell = p.base_price != null
+        ? '<span class="font-semibold">' + fmt(p.base_price) + '</span>'
+        : '<span class="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">Unpriced</span>';
+      var finishLabel = { both:'Both', textured:'Textured', smooth:'Smooth' }[p.finish] || '—';
+      return '<tr class="border-b border-gray-50 hover:bg-gray-50 transition-colors">' +
+        '<td class="px-5 py-3">' +
+          '<div class="flex items-center gap-2">' +
+            (p.image_url ? '<img src="' + esc(p.image_url) + '" class="w-8 h-8 rounded object-cover flex-shrink-0">' : '<div class="w-8 h-8 rounded bg-gray-100 flex-shrink-0"></div>') +
+            '<span class="font-medium text-gray-800">' + esc(p.name) + '</span>' +
+          '</div>' +
+        '</td>' +
+        '<td class="px-3 py-3 font-mono text-xs text-gray-500">' + esc(p.sku||'—') + '</td>' +
+        '<td class="px-3 py-3 text-gray-500">' + esc(p.gauge||'—') + '</td>' +
+        '<td class="px-3 py-3 text-gray-500 text-xs">' + esc((p.unit_type||'').replace('_',' ')) + '</td>' +
+        '<td class="px-3 py-3 text-gray-500 text-xs">' + finishLabel + '</td>' +
+        '<td class="px-3 py-3 text-right">' + priceCell + '</td>' +
+        '<td class="px-3 py-3 text-center">' + activeBadge(p.active) + '</td>' +
+        '<td class="px-3 py-3 text-right whitespace-nowrap">' +
+          '<button onclick="openProductModal(' + JSON.stringify(p).replace(/"/g,'&quot;') + ')" class="text-xs text-gray-500 hover:text-gray-800 border border-gray-200 rounded px-2 py-1 hover:bg-gray-50 transition-colors mr-1">Edit</button>' +
+          '<button onclick="deleteProduct(\'' + p.id + '\')" class="text-xs text-red-400 hover:text-red-600 border border-red-100 rounded px-2 py-1 hover:bg-red-50 transition-colors">Del</button>' +
+        '</td>' +
+      '</tr>';
+    }).join('') +
+    '</tbody></table></div>';
+  el.classList.remove('hidden');
+}
+
+function activeBadge(active) {
+  return active
+    ? '<span class="text-xs font-medium text-green-600">● Active</span>'
+    : '<span class="text-xs font-medium text-gray-300">● Inactive</span>';
+}
+
+// ── System Modal ───────────────────────────────────────────────
+
+function openSystemModal(system) {
+  var isNew = !system;
+  system = system || {};
+  $('sm-title').textContent = isNew ? 'Add System' : 'Edit System';
+  $('sm-id').value          = system.id || '';
+  $('sm-name').value        = system.name || '';
+  $('sm-slug').value        = system.slug || '';
+  var slugEl = $('sm-slug');
+  slugEl.disabled   = !isNew;
+  slugEl.className  = 'modal-input' + (isNew ? '' : ' bg-gray-50 text-gray-400');
+  var slugNote = $('sm-slug-note');
+  if (slugNote) slugNote.style.display = isNew ? 'none' : '';
+  $('sm-tagline').value     = system.tagline || '';
+  $('sm-description').value = system.description || '';
+  $('sm-active').checked    = isNew ? true : !!system.active;
+  $('sm-error').classList.add('hidden');
+  var prev = $('sm-img-preview');
+  if (system.hero_image_url) {
+    $('sm-img-thumb').src = system.hero_image_url;
+    prev.classList.remove('hidden');
+  } else { prev.classList.add('hidden'); }
+  $('sm-image-file').value = '';
+  $('system-modal').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeSystemModal() {
+  $('system-modal').classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
+async function saveSystem() {
+  var id = $('sm-id').value;
+  var errEl = $('sm-error');
+  errEl.classList.add('hidden');
+
+  var imageUrl = null;
+  var fileInput = $('sm-image-file');
+  if (fileInput.files && fileInput.files[0]) {
+    imageUrl = await uploadProductPhoto(fileInput.files[0], 'systems/' + $('sm-slug').value);
+    if (!imageUrl) { errEl.textContent = 'Image upload failed.'; errEl.classList.remove('hidden'); return; }
+  }
+
+  var payload = {
+    name:          $('sm-name').value.trim(),
+    slug:          $('sm-slug').value.trim(),
+    tagline:       $('sm-tagline').value.trim(),
+    description:   $('sm-description').value.trim(),
+    active:        $('sm-active').checked
+  };
+  if (imageUrl) payload.hero_image_url = imageUrl;
+
+  var res;
+  if (id) {
+    res = await db.from('systems').update(payload).eq('id', id);
+  } else {
+    if (!payload.slug) { errEl.textContent = 'Slug is required.'; errEl.classList.remove('hidden'); return; }
+    if (!payload.name) { errEl.textContent = 'Name is required.'; errEl.classList.remove('hidden'); return; }
+    payload.display_order = (prodState.systems ? prodState.systems.length + 1 : 99);
+    res = await db.from('systems').insert(payload);
+  }
+  if (res.error) { errEl.textContent = res.error.message; errEl.classList.remove('hidden'); return; }
+  closeSystemModal();
+  prodShowSystems();
+}
+
+// ── Category Modal ─────────────────────────────────────────────
+
+function openCategoryModal(cat) {
+  var isNew = !cat;
+  $('cm-title').textContent = isNew ? 'Add Category' : 'Edit Category';
+  $('cm-id').value          = cat ? cat.id : '';
+  $('cm-name').value        = cat ? cat.name || '' : '';
+  $('cm-slug').value        = cat ? cat.slug || '' : '';
+  $('cm-microcopy').value   = cat ? cat.microcopy || '' : '';
+  $('cm-badge').value       = cat ? cat.badge || 'OPTIONAL' : 'OPTIONAL';
+  $('cm-display-order').value = cat ? cat.display_order || 0 : (prodState.categories.length + 1);
+  $('cm-skip-label').value  = cat ? cat.skip_label || '' : '';
+  $('cm-active').checked    = cat ? !!cat.active : true;
+  $('cm-required').checked  = cat ? !!cat.required : false;
+  $('cm-error').classList.add('hidden');
+  var prev = $('cm-img-preview');
+  if (cat && cat.image_url) { $('cm-img-thumb').src = cat.image_url; prev.classList.remove('hidden'); }
+  else { prev.classList.add('hidden'); }
+  $('cm-image-file').value = '';
+  $('category-modal').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeCategoryModal() {
+  $('category-modal').classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
+async function saveCategory() {
+  var id    = $('cm-id').value;
+  var isNew = !id;
+  var errEl = $('cm-error');
+  errEl.classList.add('hidden');
+
+  var name = $('cm-name').value.trim();
+  var slug = $('cm-slug').value.trim();
+  if (!name || !slug) { errEl.textContent = 'Name and slug are required.'; errEl.classList.remove('hidden'); return; }
+
+  var imageUrl = null;
+  var fileInput = $('cm-image-file');
+  if (fileInput.files && fileInput.files[0]) {
+    imageUrl = await uploadProductPhoto(fileInput.files[0], 'categories/' + slug);
+    if (!imageUrl) { errEl.textContent = 'Image upload failed.'; errEl.classList.remove('hidden'); return; }
+  }
+
+  var data = {
+    name:          name,
+    slug:          slug,
+    microcopy:     $('cm-microcopy').value.trim(),
+    badge:         $('cm-badge').value,
+    display_order: parseInt($('cm-display-order').value) || 0,
+    skip_label:    $('cm-skip-label').value.trim(),
+    active:        $('cm-active').checked,
+    required:      $('cm-required').checked,
+    system_id:     prodState.selectedSystem.id
+  };
+  if (imageUrl) data.image_url = imageUrl;
+
+  var res = isNew
+    ? await db.from('categories').insert(data)
+    : await db.from('categories').update(data).eq('id', id);
+
+  if (res.error) { errEl.textContent = res.error.message; errEl.classList.remove('hidden'); return; }
+  closeCategoryModal();
+  prodShowCategories(prodState.selectedSystem);
+}
+
+async function deleteCategory(id) {
+  if (!confirm('Delete this category? This will also delete all its products.')) return;
+  await db.from('products').delete().eq('category_id', id);
+  var res = await db.from('categories').delete().eq('id', id);
+  if (res.error) { alert('Delete failed: ' + res.error.message); return; }
+  prodShowCategories(prodState.selectedSystem);
+}
+
+// ── Product Modal ──────────────────────────────────────────────
+
+function openProductModal(prod) {
+  var isNew = !prod;
+  $('pm-title').textContent      = isNew ? 'Add Product' : 'Edit Product';
+  $('pm-id').value               = prod ? prod.id : '';
+  $('pm-name').value             = prod ? prod.name || '' : '';
+  $('pm-sku').value              = prod ? prod.sku || '' : '';
+  $('pm-description').value      = prod ? prod.description || '' : '';
+  $('pm-gauge').value            = prod ? prod.gauge || '' : '';
+  $('pm-unit-type').value        = prod ? prod.unit_type || 'each' : 'each';
+  $('pm-base-price').value       = prod && prod.base_price != null ? prod.base_price : '';
+  $('pm-finish').value           = prod ? prod.finish || 'both' : 'both';
+  $('pm-display-order').value    = prod ? prod.display_order || 0 : (prodState.products.length + 1);
+  $('pm-active').checked         = prod ? !!prod.active : true;
+  $('pm-error').classList.add('hidden');
+  updatePriceNullBadge();
+  var prev = $('pm-img-preview');
+  if (prod && prod.image_url) { $('pm-img-thumb').src = prod.image_url; prev.classList.remove('hidden'); }
+  else { prev.classList.add('hidden'); }
+  $('pm-image-file').value = '';
+  $('product-modal').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function updatePriceNullBadge() {
+  var val = $('pm-base-price').value;
+  var badge = $('pm-price-null-badge');
+  if (!val && val !== 0) badge.classList.remove('hidden');
+  else badge.classList.add('hidden');
+}
+
+function closeProductModal() {
+  $('product-modal').classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
+async function saveProduct() {
+  var id    = $('pm-id').value;
+  var isNew = !id;
+  var errEl = $('pm-error');
+  errEl.classList.add('hidden');
+
+  var name = $('pm-name').value.trim();
+  var sku  = $('pm-sku').value.trim();
+  if (!name || !sku) { errEl.textContent = 'Name and SKU are required.'; errEl.classList.remove('hidden'); return; }
+
+  var imageUrl = null;
+  var fileInput = $('pm-image-file');
+  if (fileInput.files && fileInput.files[0]) {
+    imageUrl = await uploadProductPhoto(fileInput.files[0], 'products/' + sku.toLowerCase());
+    if (!imageUrl) { errEl.textContent = 'Image upload failed.'; errEl.classList.remove('hidden'); return; }
+  }
+
+  var priceVal = $('pm-base-price').value;
+  var data = {
+    name:          name,
+    sku:           sku,
+    description:   $('pm-description').value.trim(),
+    gauge:         $('pm-gauge').value.trim() || null,
+    unit_type:     $('pm-unit-type').value,
+    base_price:    priceVal !== '' ? parseFloat(priceVal) : null,
+    finish:        $('pm-finish').value,
+    display_order: parseInt($('pm-display-order').value) || 0,
+    active:        $('pm-active').checked,
+    category_id:   prodState.selectedCategory.id
+  };
+  if (imageUrl) data.image_url = imageUrl;
+
+  var res = isNew
+    ? await db.from('products').insert(data)
+    : await db.from('products').update(data).eq('id', id);
+
+  if (res.error) { errEl.textContent = res.error.message; errEl.classList.remove('hidden'); return; }
+  closeProductModal();
+  prodShowProducts(prodState.selectedCategory);
+}
+
+async function deleteProduct(id) {
+  if (!confirm('Delete this product?')) return;
+  var res = await db.from('products').delete().eq('id', id);
+  if (res.error) { alert('Delete failed: ' + res.error.message); return; }
+  prodShowProducts(prodState.selectedCategory);
+}
+
+// ── Image Upload Utility ───────────────────────────────────────
+
+async function uploadProductPhoto(file, pathPrefix) {
+  var ext  = file.name.split('.').pop().toLowerCase();
+  var path = pathPrefix + '-' + Date.now() + '.' + ext;
+  var res  = await db.storage.from('product-photos').upload(path, file, { upsert: true });
+  if (res.error) { console.error('Upload error', res.error); return null; }
+  return db.storage.from('product-photos').getPublicUrl(path).data.publicUrl;
+}
+
+function previewImg(input, thumbId, previewId) {
+  if (input.files && input.files[0]) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      $(thumbId).src = e.target.result;
+      $(previewId).classList.remove('hidden');
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+
+// ── Boot ───────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
