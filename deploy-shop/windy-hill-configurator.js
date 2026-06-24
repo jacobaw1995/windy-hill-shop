@@ -486,27 +486,25 @@ function buildCardHeaderHTML(cat) {
   }
 
   var nameCls = status === 'skipped'
-    ? 'line-through text-gray-400 text-sm font-semibold'
-    : 'text-gray-800 text-sm font-semibold';
+    ? 'line-through text-gray-400 font-semibold text-base'
+    : 'text-gray-900 font-semibold text-base leading-snug';
 
   // Chevron
   var chevron = status !== 'skipped'
-    ? '<svg class="w-4 h-4 text-gray-300 flex-shrink-0 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>'
+    ? '<svg class="w-5 h-5 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>'
     : '';
 
-  return '<div class="card-header flex items-center gap-3 px-3 py-3 select-none" ' +
+  return '<div class="card-header flex items-center gap-4 p-3 select-none" ' +
     'role="button" tabindex="0" ' +
     'onclick="expandCard(\'' + cat.id + '\')" ' +
     'onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();expandCard(\'' + cat.id + '\')}">' +
-    '<img src="' + esc(photoSrc) + '" alt="" class="w-14 h-14 rounded-lg object-cover flex-shrink-0 bg-gray-100" onerror="this.style.opacity=\'0\'">' +
-    '<div class="flex-1 min-w-0">' +
-      '<div class="flex items-center gap-1.5 mb-0.5">' +
-        (state.mode !== 'alacarte' ? '<span class="text-xs font-semibold px-1.5 py-0.5 rounded flex-shrink-0 ' + badgeCls + '">' + esc(cat.badge) + '</span>' : '') +
-        '<span class="' + nameCls + ' truncate">' + esc(cat.name) + '</span>' +
-      '</div>' +
+    '<img src="' + esc(photoSrc) + '" alt="" class="w-28 h-28 rounded-xl object-cover flex-shrink-0 bg-gray-100" onerror="this.src=\'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==\'">' +
+    '<div class="flex-1 min-w-0 py-1">' +
+      (state.mode !== 'alacarte' ? '<div class="mb-1"><span class="text-xs font-semibold px-2 py-0.5 rounded ' + badgeCls + '">' + esc(cat.badge) + '</span></div>' : '') +
+      '<div class="' + nameCls + ' mb-1">' + esc(cat.name) + '</div>' +
       '<div>' + subtitle + '</div>' +
     '</div>' +
-    statusIcon + chevron +
+    '<div class="flex flex-col items-center gap-1 flex-shrink-0">' + statusIcon + chevron + '</div>' +
     '</div>';
 }
 
