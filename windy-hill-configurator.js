@@ -46,6 +46,9 @@ function getPrice(product) {
   return (product && product.base_price !== null && product.base_price !== undefined)
     ? parseFloat(product.base_price) : 1.00;
 }
+function fmtUnit(u) {
+  return { linear_foot: 'lf', square: 'sq', bag: 'bag', roll: 'roll', each: 'ea' }[u] || u;
+}
 
 // ═══════════════════════════════════════════════════════════════
 // SESSION 1 — STARTUP + ENTRY SCREEN
@@ -1012,7 +1015,7 @@ function buildClipFields(cat) {
     html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">' + esc(p.name).toUpperCase() + '</label>';
     html += '<div class="flex items-center gap-2">';
     html += '<input type="number" id="clip-' + p.id + '" min="0" step="1" placeholder="0" class="border border-gray-300 rounded px-3 py-1.5 w-24 text-sm">';
-    html += '<span class="text-xs text-gray-400">' + esc(p.unit_type) + ' · ' + fmt(getPrice(p)) + ' ea</span>';
+    html += '<span class="text-xs text-gray-400">' + fmtUnit(p.unit_type) + ' · ' + fmt(getPrice(p)) + ' ea</span>';
     html += '</div></div>';
   });
   html += '</div>';
@@ -1089,7 +1092,7 @@ function buildFastenerFields(cat) {
     html += '<div class="mb-3"><label class="block text-xs font-semibold text-gray-600 mb-1">' + esc(p.name).toUpperCase() + '</label>';
     html += '<div class="flex items-center gap-2">';
     html += '<input type="number" id="fastener-' + p.id + '" min="0" step="1" placeholder="0" class="border border-gray-300 rounded px-3 py-1.5 w-24 text-sm">';
-    html += '<span class="text-xs text-gray-400">' + esc(p.unit_type) + ' · ' + fmt(getPrice(p)) + ' ea</span>';
+    html += '<span class="text-xs text-gray-400">' + fmtUnit(p.unit_type) + ' · ' + fmt(getPrice(p)) + ' ea</span>';
     html += '</div></div>';
   });
 
@@ -1221,7 +1224,7 @@ function buildQtyFields(cat) {
     html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">' + esc(p.name).toUpperCase() + '</label>';
     html += '<div class="flex items-center gap-2">';
     html += '<input type="number" id="qty-' + p.id + '" min="0" step="1" placeholder="0" class="border border-gray-300 rounded px-3 py-1.5 w-24 text-sm">';
-    html += '<span class="text-xs text-gray-400">' + esc(p.unit_type) + ' · ' + fmt(getPrice(p)) + ' ea</span>';
+    html += '<span class="text-xs text-gray-400">' + fmtUnit(p.unit_type) + ' · ' + fmt(getPrice(p)) + ' ea</span>';
     html += '</div></div>';
   });
   html += '</div>';
@@ -1273,10 +1276,6 @@ function buildPurlinFields(cat) {
     html += '<div class="text-blue-900 text-base font-bold mb-1">' + calc + ' sticks (16 ft each)</div>';
     html += '<div class="text-xs text-blue-600">' + detail + '</div>';
     html += '<div class="text-xs text-blue-600 mt-1">Spaced 2 ft apart up the slope · 3 ft per Ag Panel wide</div>';
-    html += '</div>';
-  } else {
-    html += '<div class="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4 text-sm text-amber-800">';
-    html += 'Add your panel runs first to auto-calculate purlins, or enter quantity manually below.';
     html += '</div>';
   }
 
@@ -1736,7 +1735,7 @@ function commitFasteners(cat) {
       var qty = inp ? parseInt(inp.value) || 0 : 0;
       otherSaved[p.id] = qty;
       if (!qty) return;
-      items.push({ category: cat.name, description: p.name, specs: qty + ' ' + p.unit_type, line_total: qty * getPrice(p) });
+      items.push({ category: cat.name, description: p.name, specs: qty + ' ' + fmtUnit(p.unit_type), line_total: qty * getPrice(p) });
     });
   var trimSizeR = document.querySelector('input[name="trimscrewsize-' + cat.id + '"]:checked');
   state.checklist[cat.id].savedSelection = {
@@ -1809,7 +1808,7 @@ function commitQtyItems(cat, prefix) {
     var qty = inp ? parseInt(inp.value) || 0 : 0;
     saved[p.id] = qty;
     if (!qty) return;
-    items.push({ category: cat.name, description: p.name, specs: qty + ' ' + p.unit_type, line_total: qty * getPrice(p) });
+    items.push({ category: cat.name, description: p.name, specs: qty + ' ' + fmtUnit(p.unit_type), line_total: qty * getPrice(p) });
   });
   state.checklist[cat.id].savedSelection = { perProduct: saved };
   return items;
