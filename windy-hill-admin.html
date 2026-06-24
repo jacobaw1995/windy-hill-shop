@@ -1959,8 +1959,15 @@ async function saveCategory() {
   var imageUrl = null;
   var fileInput = $('cm-image-file');
   if (fileInput.files && fileInput.files[0]) {
-    imageUrl = await uploadProductPhoto(fileInput.files[0], 'categories/' + slug);
-    if (!imageUrl) { errEl.textContent = 'Image upload failed.'; errEl.classList.remove('hidden'); return; }
+    var ext  = fileInput.files[0].name.split('.').pop().toLowerCase();
+    var path = slug + '.' + ext;
+    var upRes = await db.storage.from('product-photos').upload(path, fileInput.files[0], { upsert: true });
+    if (upRes.error) {
+      errEl.textContent = 'Image upload failed: ' + upRes.error.message;
+      errEl.classList.remove('hidden');
+      return;
+    }
+    imageUrl = db.storage.from('product-photos').getPublicUrl(path).data.publicUrl;
   }
 
   var data = {
