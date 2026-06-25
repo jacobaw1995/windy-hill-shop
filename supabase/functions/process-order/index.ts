@@ -371,6 +371,11 @@ async function generatePDF(
   page.drawText(pbLabel, { x: footerRightX - pbW - stW, y: 32, size: 8, font, color: dgray });
   page.drawText(stLabel, { x: footerRightX - stW,       y: 32, size: 9, font: fontBold, color: rust });
 
+  // Pair spec files with their matching Custom Trim line items by position
+  const customTrimItems = lineItems.filter(item =>
+    String(item.description ?? '').startsWith('Custom Trim')
+  );
+
   // ── Drawing pages — one per spec file
   for (let fi = 0; fi < specFiles.length; fi++) {
     const f = specFiles[fi];
@@ -402,13 +407,48 @@ async function generatePDF(
       x: dw - 36 - fontBold.widthOfTextAtSize(orderNum, 9),
       y: dh - 22, size: 9, font: fontBold, color: white,
     });
-    const desc = String(f.description ?? '') || `Drawing ${fi + 1}`;
-    dPage.drawText(desc, { x: 36, y: dh - 38, size: 8, font, color: rgb(0.7, 0.7, 0.7) });
+    dPage.drawText(`Drawing ${fi + 1} of ${specFiles.length}`, {
+      x: 36, y: dh - 38, size: 8, font, color: rgb(0.7, 0.7, 0.7),
+    });
 
-    // Image — centered with padding
-    const margin = 48;
+    // Trim spec panel — light gray strip below header
+    const trimItem = customTrimItems[fi] ?? null;
+    let specPanelH = 0;
+    if (trimItem) {
+      // Strip "Custom Trim — " prefix to get the profile name + specs
+      const rawDesc  = String(trimItem.description ?? '');
+      const trimDesc = rawDesc.replace(/^Custom Trim\s*[—\-]\s*/i, '');
+      const trimSpecs = String(trimItem.specs ?? '');
+      const trimAmt   = trimItem.amount != null
+        ? '$' + Number(trimItem.amount).toFixed(2)
+        : 'Quote Required';
+
+      specPanelH = 56;
+      const panelY = dh - 48 - specPanelH;
+      dPage.drawRectangle({ x: 0, y: panelY, width: dw, height: specPanelH, color: rgb(0.96, 0.96, 0.97) });
+      dPage.drawLine({ start: { x: 0, y: panelY }, end: { x: dw, y: panelY }, thickness: 0.5, color: lgray });
+
+      // Profile name / description
+      const trimDescTrunc = trimDesc.length > 70 ? trimDesc.slice(0, 68) + '…' : trimDesc;
+      dPage.drawText(trimDescTrunc, { x: 36, y: panelY + 36, size: 11, font: fontBold, color: navy });
+
+      // Specs (linear footage)
+      if (trimSpecs) {
+        dPage.drawText(trimSpecs, { x: 36, y: panelY + 18, size: 9, font, color: dgray });
+      }
+
+      // Amount right-aligned
+      dPage.drawText(trimAmt, {
+        x: dw - 36 - fontBold.widthOfTextAtSize(trimAmt, 12),
+        y: panelY + 22, size: 12, font: fontBold, color: rust,
+      });
+    }
+
+    // Image — centered in remaining space
+    const margin   = 36;
+    const topUsed  = 48 + specPanelH;
     const maxW = dw - margin * 2;
-    const maxH = dh - 48 - margin * 2;
+    const maxH = dh - topUsed - margin * 2;
     const scaled = img.scaleToFit(maxW, maxH);
     dPage.drawImage(img, {
       x: margin + (maxW - scaled.width) / 2,
