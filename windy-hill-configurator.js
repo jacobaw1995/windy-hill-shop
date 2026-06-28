@@ -234,11 +234,12 @@ function goHome(e) {
 }
 
 function scrollToCart() {
-  if (window.innerWidth < 768) {
+  var cartPanel = $('cart-panel');
+  // If the desktop cart panel is hidden or not rendered, open the mobile overlay
+  if (!cartPanel || cartPanel.offsetParent === null) {
     showMobileCart();
   } else {
-    var el = $('cart-panel');
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    cartPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 }
 
