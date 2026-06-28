@@ -234,8 +234,12 @@ function goHome(e) {
 }
 
 function scrollToCart() {
-  var el = $('cart-panel');
-  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  if (window.innerWidth < 768) {
+    showMobileCart();
+  } else {
+    var el = $('cart-panel');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 }
 
 async function init() {
