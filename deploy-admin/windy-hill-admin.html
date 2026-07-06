@@ -266,7 +266,6 @@
             <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between gap-3">
               <h2 id="prods-title" class="font-bold text-gray-800">Products</h2>
               <div class="flex gap-2">
-                <button onclick="openProductPicker()" class="text-xs font-semibold px-3 py-1.5 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors">Copy Existing</button>
                 <button onclick="openProductModal(null)" class="btn-rust text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors">+ New Product</button>
               </div>
             </div>
@@ -651,6 +650,23 @@
           <div><label class="modal-label">Display Order</label>
             <input id="cm-display-order" type="number" class="modal-input"></div>
         </div>
+        <div><label class="modal-label">Catalog Section <span class="font-normal text-gray-400">(links wizard step to product catalog)</span></label>
+          <select id="cm-catalog-section" class="modal-input">
+            <option value="">— None —</option>
+            <option value="panel">panel</option>
+            <option value="ridge_cap">ridge_cap</option>
+            <option value="eave_trim">eave_trim</option>
+            <option value="rake_trim">rake_trim</option>
+            <option value="hip_cap">hip_cap</option>
+            <option value="valley">valley</option>
+            <option value="closure">closure</option>
+            <option value="clip">clip</option>
+            <option value="z_bar">z_bar</option>
+            <option value="underlayment">underlayment</option>
+            <option value="fastener">fastener</option>
+            <option value="sealant">sealant</option>
+            <option value="misc">misc</option>
+          </select></div>
         <div><label class="modal-label">Skip Label <span class="font-normal text-gray-400">(checkbox text)</span></label>
           <input id="cm-skip-label" type="text" placeholder="e.g. I do not need hip caps" class="modal-input"></div>
         <div><label class="modal-label">Category Image</label>
@@ -717,6 +733,44 @@
               <option value="textured">Textured only</option>
               <option value="smooth">Smooth only</option>
             </select></div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div><label class="modal-label">Product Type</label>
+            <select id="pm-product-type" class="modal-input">
+              <option value="panel">panel</option>
+              <option value="trim">trim</option>
+              <option value="accessory">accessory</option>
+              <option value="fastener">fastener</option>
+              <option value="sealant">sealant</option>
+              <option value="underlayment">underlayment</option>
+            </select></div>
+          <div><label class="modal-label">Catalog Section</label>
+            <select id="pm-catalog-section" class="modal-input">
+              <option value="panel">panel</option>
+              <option value="ridge_cap">ridge_cap</option>
+              <option value="eave_trim">eave_trim</option>
+              <option value="rake_trim">rake_trim</option>
+              <option value="hip_cap">hip_cap</option>
+              <option value="valley">valley</option>
+              <option value="closure">closure</option>
+              <option value="clip">clip</option>
+              <option value="z_bar">z_bar</option>
+              <option value="underlayment">underlayment</option>
+              <option value="fastener">fastener</option>
+              <option value="sealant">sealant</option>
+              <option value="misc">misc</option>
+            </select></div>
+        </div>
+        <div>
+          <label class="modal-label">Compatible Systems <span class="font-normal text-gray-400">(which systems show this product)</span></label>
+          <div class="flex gap-4 mt-1">
+            <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+              <input type="checkbox" id="pm-sys-ag-panel" value="ag-panel" class="pm-sys-cb w-4 h-4 accent-amber-600"> Exposed Fastener (AG)
+            </label>
+            <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+              <input type="checkbox" id="pm-sys-standing-seam" value="standing-seam" class="pm-sys-cb w-4 h-4 accent-amber-600"> Standing Seam
+            </label>
+          </div>
         </div>
         <div><label class="modal-label">Product Image</label>
           <div id="pm-img-preview" class="mb-2 hidden"><img id="pm-img-thumb" class="h-24 w-full object-cover rounded-lg border"></div>
@@ -1281,7 +1335,7 @@ async function openColorAssignModal(colorId) {
   document.body.style.overflow = 'hidden';
 
   var [prodsRes, existRes] = await Promise.all([
-    db.from('products').select('id, name, sku, categories(name, systems(name))'),
+    db.from('products').select('id, name, sku, catalog_section, compatible_systems').order('catalog_section').order('name'),
     db.from('product_colors').select('product_id, price_modifier').eq('color_id', colorId)
   ]);
 
@@ -1294,13 +1348,12 @@ async function openColorAssignModal(colorId) {
   $('ca-list').innerHTML = colorAssignState.allProducts.map(function(p) {
     var checked = existMap.hasOwnProperty(p.id) ? 'checked' : '';
     var mod = existMap[p.id] || 0;
-    var sys = p.categories && p.categories.systems ? p.categories.systems.name : '';
-    var cat = p.categories ? p.categories.name : '';
+    var sysLabel = (p.compatible_systems || []).map(function(s){ return s === 'ag-panel' ? 'AG' : 'SS'; }).join('+');
     return '<label class="flex items-center gap-3 py-2 cursor-pointer hover:bg-gray-50 rounded px-2 -mx-2">' +
       '<input type="checkbox" data-pid="' + p.id + '" class="color-assign-cb w-4 h-4 accent-amber-600" ' + checked + '>' +
       '<div class="flex-1 min-w-0">' +
         '<span class="text-sm font-medium text-gray-800">' + esc(p.name) + '</span>' +
-        '<span class="text-xs text-gray-400 ml-2">' + esc(sys) + ' › ' + esc(cat) + '</span>' +
+        '<span class="text-xs text-gray-400 ml-2">' + esc(p.catalog_section || '') + (sysLabel ? ' · ' + sysLabel : '') + '</span>' +
       '</div>' +
       '<div class="flex items-center gap-1 flex-shrink-0">' +
         '<span class="text-xs text-gray-400">+$</span>' +
@@ -1428,7 +1481,7 @@ async function openLengthAssignModal(lengthId) {
   document.body.style.overflow = 'hidden';
 
   var [prodsRes, existRes] = await Promise.all([
-    db.from('products').select('id, name, sku, categories(name, systems(name))'),
+    db.from('products').select('id, name, sku, catalog_section, compatible_systems').order('catalog_section').order('name'),
     db.from('product_lengths').select('product_id').eq('length_option_id', lengthId)
   ]);
 
@@ -1438,13 +1491,12 @@ async function openLengthAssignModal(lengthId) {
 
   $('la-list').innerHTML = lengthAssignState.allProducts.map(function(p) {
     var checked = existSet.has(p.id) ? 'checked' : '';
-    var sys = p.categories && p.categories.systems ? p.categories.systems.name : '';
-    var cat = p.categories ? p.categories.name : '';
+    var sysLabel = (p.compatible_systems || []).map(function(s){ return s === 'ag-panel' ? 'AG' : 'SS'; }).join('+');
     return '<label class="flex items-center gap-3 py-2 cursor-pointer hover:bg-gray-50 rounded px-2 -mx-2">' +
       '<input type="checkbox" data-pid="' + p.id + '" class="length-assign-cb w-4 h-4 accent-amber-600" ' + checked + '>' +
       '<div class="min-w-0">' +
         '<span class="text-sm font-medium text-gray-800">' + esc(p.name) + '</span>' +
-        '<span class="text-xs text-gray-400 ml-2">' + esc(sys) + ' › ' + esc(cat) + '</span>' +
+        '<span class="text-xs text-gray-400 ml-2">' + esc(p.catalog_section || '') + (sysLabel ? ' · ' + sysLabel : '') + '</span>' +
       '</div>' +
     '</label>';
   }).join('') || '<p class="text-sm text-gray-400 text-center py-4">No products found.</p>';
@@ -1943,7 +1995,9 @@ async function prodShowProducts(category) {
   $('prods-loading').classList.remove('hidden');
   $('prods-list').classList.add('hidden');
 
-  var res = await db.from('products').select('*').eq('category_id', category.id).order('display_order');
+  var res = category.catalog_section
+    ? await db.from('products').select('*').eq('catalog_section', category.catalog_section).order('display_order')
+    : await db.from('products').select('*').order('display_order');
   $('prods-loading').classList.add('hidden');
   if (res.error) { alert('Error: ' + res.error.message); return; }
   prodState.products = res.data || [];
@@ -1963,7 +2017,7 @@ function renderProductsList() {
       '<th class="text-left px-3 py-3">SKU</th>' +
       '<th class="text-left px-3 py-3">Gauge</th>' +
       '<th class="text-left px-3 py-3">Unit</th>' +
-      '<th class="text-left px-3 py-3">Finish</th>' +
+      '<th class="text-left px-3 py-3">Systems</th>' +
       '<th class="text-right px-3 py-3">Price</th>' +
       '<th class="text-center px-3 py-3">Active</th>' +
       '<th class="px-3 py-3"></th>' +
@@ -1984,7 +2038,7 @@ function renderProductsList() {
         '<td class="px-3 py-3 font-mono text-xs text-gray-500">' + esc(p.sku||'—') + '</td>' +
         '<td class="px-3 py-3 text-gray-500">' + esc(p.gauge||'—') + '</td>' +
         '<td class="px-3 py-3 text-gray-500 text-xs">' + esc((p.unit_type||'').replace('_',' ')) + '</td>' +
-        '<td class="px-3 py-3 text-gray-500 text-xs">' + finishLabel + '</td>' +
+        '<td class="px-3 py-3 text-gray-500 text-xs">' + (p.compatible_systems || []).map(function(s){ return s === 'ag-panel' ? 'AG' : 'SS'; }).join(', ') + '</td>' +
         '<td class="px-3 py-3 text-right">' + priceCell + '</td>' +
         '<td class="px-3 py-3 text-center">' + activeBadge(p.active) + '</td>' +
         '<td class="px-3 py-3 text-right whitespace-nowrap">' +
@@ -2078,13 +2132,9 @@ async function deleteSystem(id) {
   var sys = (prodState.systems || []).find(function(s) { return s.id === id; });
   var name = sys ? sys.name : 'this system';
   if (!confirm('Permanently delete "' + name + '"?\n\nThis will delete all its stages, categories, and products. This cannot be undone.')) return;
-  // Delete in order: products → categories → stages → system
-  var cats = await db.from('categories').select('id').eq('system_id', id);
-  if (cats.data && cats.data.length) {
-    var catIds = cats.data.map(function(c) { return c.id; });
-    await db.from('products').delete().in('category_id', catIds);
-    await db.from('categories').delete().eq('system_id', id);
-  }
+  // Delete in order: categories → stages → system
+  // Note: products are catalog items (not owned by systems) — do NOT cascade delete them
+  await db.from('categories').delete().eq('system_id', id);
   await db.from('stages').delete().eq('system_id', id);
   var res = await db.from('systems').delete().eq('id', id);
   if (res.error) { alert('Delete failed: ' + res.error.message); return; }
@@ -2102,6 +2152,7 @@ function openCategoryModal(cat, stageId) {
   $('cm-slug').value        = cat ? cat.slug || '' : '';
   $('cm-microcopy').value   = cat ? cat.microcopy || '' : '';
   $('cm-badge').value       = cat ? cat.badge || 'OPTIONAL' : 'OPTIONAL';
+  $('cm-catalog-section').value = cat ? cat.catalog_section || '' : '';
   $('cm-display-order').value = cat ? cat.display_order || 0 : (prodState.categories.length + 1);
   $('cm-skip-label').value  = cat ? cat.skip_label || '' : '';
   $('cm-active').checked    = cat ? !!cat.active : true;
@@ -2157,16 +2208,17 @@ async function saveCategory() {
 
   var stageVal = $('cm-stage-select').value || null;
   var data = {
-    name:          name,
-    slug:          slug,
-    microcopy:     $('cm-microcopy').value.trim(),
-    badge:         $('cm-badge').value,
-    display_order: parseInt($('cm-display-order').value) || 0,
-    skip_label:    $('cm-skip-label').value.trim(),
-    active:        $('cm-active').checked,
-    required:      $('cm-required').checked,
-    system_id:     prodState.selectedSystem.id,
-    stage_id:      stageVal
+    name:             name,
+    slug:             slug,
+    microcopy:        $('cm-microcopy').value.trim(),
+    badge:            $('cm-badge').value,
+    catalog_section:  $('cm-catalog-section').value || null,
+    display_order:    parseInt($('cm-display-order').value) || 0,
+    skip_label:       $('cm-skip-label').value.trim(),
+    active:           $('cm-active').checked,
+    required:         $('cm-required').checked,
+    system_id:        prodState.selectedSystem.id,
+    stage_id:         stageVal
   };
   if (imageUrl) data.image_url = imageUrl;
 
@@ -2180,8 +2232,8 @@ async function saveCategory() {
 }
 
 async function deleteCategory(id) {
-  if (!confirm('Delete this category? This will also delete all its products.')) return;
-  await db.from('products').delete().eq('category_id', id);
+  if (!confirm('Delete this wizard step (category)? Products in the catalog are not affected.')) return;
+  // Note: products are catalog items — do NOT cascade delete them
   var res = await db.from('categories').delete().eq('id', id);
   if (res.error) { alert('Delete failed: ' + res.error.message); return; }
   prodShowSystem(prodState.selectedSystem);
@@ -2200,6 +2252,12 @@ function openProductModal(prod) {
   $('pm-unit-type').value        = prod ? prod.unit_type || 'each' : 'each';
   $('pm-base-price').value       = prod && prod.base_price != null ? prod.base_price : '';
   $('pm-finish').value           = prod ? prod.finish || 'both' : 'both';
+  $('pm-product-type').value     = prod ? prod.product_type || 'trim' : 'trim';
+  $('pm-catalog-section').value  = prod ? prod.catalog_section || (prodState.selectedCategory && prodState.selectedCategory.catalog_section) || '' : (prodState.selectedCategory && prodState.selectedCategory.catalog_section) || '';
+  // Populate compatible_systems checkboxes
+  var sysCbs = document.querySelectorAll('.pm-sys-cb');
+  var compatSystems = prod ? (prod.compatible_systems || []) : (prodState.selectedSystem ? [prodState.selectedSystem.slug] : []);
+  sysCbs.forEach(function(cb) { cb.checked = compatSystems.indexOf(cb.value) !== -1; });
   $('pm-display-order').value    = prod ? prod.display_order || 0 : (prodState.products.length + 1);
   $('pm-active').checked         = prod ? !!prod.active : true;
   $('pm-error').classList.add('hidden');
@@ -2227,7 +2285,7 @@ async function openProductPicker() {
   $('product-picker-modal').classList.remove('hidden');
   document.body.style.overflow = 'hidden';
 
-  var res = await db.from('products').select('*, categories(name, systems(name))').order('name');
+  var res = await db.from('products').select('id, name, sku, catalog_section, compatible_systems, base_price, image_url').order('catalog_section').order('name');
   if (res.error) { $('picker-list').innerHTML = '<div class="py-8 text-center text-sm text-red-400">' + res.error.message + '</div>'; return; }
   allPickerProducts = res.data || [];
   renderPickerList(allPickerProducts);
@@ -2237,14 +2295,13 @@ function renderPickerList(products) {
   var el = $('picker-list');
   if (!products.length) { el.innerHTML = '<div class="py-8 text-center text-sm text-gray-400">No products found.</div>'; return; }
   el.innerHTML = products.map(function(p) {
-    var catName = p.categories ? p.categories.name : '';
-    var sysName = p.categories && p.categories.systems ? p.categories.systems.name : '';
+    var sysLabel = (p.compatible_systems || []).map(function(s){ return s === 'ag-panel' ? 'AG' : 'SS'; }).join('+');
     var pj = JSON.stringify(p).replace(/"/g, '&quot;');
     return '<div class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors" onclick="copyProductToCategory(' + pj + ')">' +
       (p.image_url ? '<img src="' + esc(p.image_url) + '" class="w-10 h-10 rounded-lg object-cover flex-shrink-0">' : '<div class="w-10 h-10 rounded-lg bg-gray-100 flex-shrink-0"></div>') +
       '<div class="flex-1 min-w-0">' +
         '<div class="font-medium text-sm text-gray-800">' + esc(p.name) + '</div>' +
-        '<div class="text-xs text-gray-400">' + esc(sysName) + (catName ? ' › ' + esc(catName) : '') + (p.sku ? ' · ' + esc(p.sku) : '') + '</div>' +
+        '<div class="text-xs text-gray-400">' + esc(p.catalog_section || '') + (sysLabel ? ' · ' + sysLabel : '') + (p.sku ? ' · ' + esc(p.sku) : '') + '</div>' +
       '</div>' +
       '<div class="text-xs text-gray-400 flex-shrink-0">' + (p.base_price != null ? '$' + Number(p.base_price).toFixed(2) : '—') + '</div>' +
     '</div>';
@@ -2298,17 +2355,24 @@ async function saveProduct() {
   }
 
   var priceVal = $('pm-base-price').value;
+  // Collect compatible_systems from checkboxes
+  var compatSystems = [];
+  document.querySelectorAll('.pm-sys-cb').forEach(function(cb) {
+    if (cb.checked) compatSystems.push(cb.value);
+  });
   var data = {
-    name:          name,
-    sku:           sku,
-    description:   $('pm-description').value.trim(),
-    gauge:         $('pm-gauge').value.trim() || null,
-    unit_type:     $('pm-unit-type').value,
-    base_price:    priceVal !== '' ? parseFloat(priceVal) : null,
-    finish:        $('pm-finish').value,
-    display_order: parseInt($('pm-display-order').value) || 0,
-    active:        $('pm-active').checked,
-    category_id:   prodState.selectedCategory.id
+    name:               name,
+    sku:                sku,
+    description:        $('pm-description').value.trim(),
+    gauge:              $('pm-gauge').value.trim() || null,
+    unit_type:          $('pm-unit-type').value,
+    base_price:         priceVal !== '' ? parseFloat(priceVal) : null,
+    finish:             $('pm-finish').value,
+    product_type:       $('pm-product-type').value || null,
+    catalog_section:    $('pm-catalog-section').value || null,
+    compatible_systems: compatSystems,
+    display_order:      parseInt($('pm-display-order').value) || 0,
+    active:             $('pm-active').checked
   };
   if (imageUrl) data.image_url = imageUrl;
 
@@ -2318,7 +2382,9 @@ async function saveProduct() {
 
   if (res.error) { errEl.textContent = res.error.message; errEl.classList.remove('hidden'); return; }
   closeProductModal();
-  prodShowProducts(prodState.selectedCategory);
+  if (prodState.selectedCategory) {
+    prodShowProducts(prodState.selectedCategory);
+  }
 }
 
 async function deleteProduct(id) {
