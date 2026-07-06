@@ -156,22 +156,37 @@ async function loadAllColors() {
 }
 
 async function loadCatalog() {
-  var r = await db.from('systems')
-    .select('*, categories(*, products(*, product_colors(colors(*)), product_lengths(length_options(*))))')
+  // Fetch systems + wizard pipeline (category steps, no products nested)
+  var sysR = await db.from('systems')
+    .select('*, categories(*)')
     .eq('active', true)
     .order('display_order');
-  if (r.error) throw r.error;
-  r.data.forEach(function(sys) {
+  if (sysR.error) throw sysR.error;
+
+  // Fetch flat product catalog — all products tagged with catalog_section + compatible_systems
+  var prodR = await db.from('products')
+    .select('*, product_colors(colors(*)), product_lengths(length_options(*))')
+    .eq('active', true)
+    .order('display_order');
+  if (prodR.error) throw prodR.error;
+
+  var allProducts = prodR.data || [];
+
+  // Attach products to each wizard step by matching catalog_section and compatible system
+  sysR.data.forEach(function(sys) {
     sys.categories = (sys.categories || [])
       .filter(function(c) { return c.active; })
       .sort(function(a,b) { return a.display_order - b.display_order; });
     sys.categories.forEach(function(cat) {
-      cat.products = (cat.products || [])
-        .filter(function(p) { return p.active; })
-        .sort(function(a,b) { return a.display_order - b.display_order; });
+      cat.products = allProducts.filter(function(p) {
+        return p.catalog_section === cat.catalog_section
+          && Array.isArray(p.compatible_systems)
+          && p.compatible_systems.indexOf(sys.slug) !== -1;
+      });
+      cat.products.sort(function(a,b) { return a.display_order - b.display_order; });
     });
   });
-  return r.data;
+  return sysR.data;
 }
 
 function buildEntryScreen(systems) {

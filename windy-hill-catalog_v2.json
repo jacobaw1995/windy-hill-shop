@@ -1,0 +1,2816 @@
+{
+  "meta": {
+    "version": 2,
+    "generated": "2026-07-06",
+    "source": "v1 catalog + price sheet photos"
+  },
+  "colors": [
+    {
+      "id": "4d36056e",
+      "name": "S-W Ash Gray",
+      "code": "WXA0092L",
+      "hex": "#b2beb5"
+    },
+    {
+      "id": "6ccdcbac",
+      "name": "Burnished Slate",
+      "code": "WXB1007L",
+      "hex": "#504541"
+    },
+    {
+      "id": "66aa7518",
+      "name": "Burgundy",
+      "code": "WXR0076L",
+      "hex": "#482a32"
+    },
+    {
+      "id": "19b27be1",
+      "name": "Charcoal",
+      "code": "WXA0090L",
+      "hex": "#615b5d"
+    },
+    {
+      "id": "04e20129",
+      "name": "Cocoa Brown",
+      "code": "WXB1009L",
+      "hex": "#8b4513"
+    },
+    {
+      "id": "a97a2f5c",
+      "name": "Taupe/Clay",
+      "code": "WXD0047L",
+      "hex": "#7a685b"
+    },
+    {
+      "id": "3822c36c",
+      "name": "Pewter Gray",
+      "code": "WXA0093L",
+      "hex": "#8b8487"
+    },
+    {
+      "id": "1014f5ab",
+      "name": "Lightstone",
+      "code": "WXD0038L",
+      "hex": "#c9b6aa"
+    },
+    {
+      "id": "270a1def",
+      "name": "Ivory",
+      "code": "WXD0051L",
+      "hex": "#f2e0c3"
+    },
+    {
+      "id": "5ea05961",
+      "name": "Rustic Red",
+      "code": "WXR0074L",
+      "hex": "#7b2e28"
+    },
+    {
+      "id": "a3407446",
+      "name": "Buckskin",
+      "code": "WXD0048L",
+      "hex": "#87736c"
+    },
+    {
+      "id": "31e65ac6",
+      "name": "Alamo White",
+      "code": "WXW0051L",
+      "hex": "#d4cfd3"
+    },
+    {
+      "id": "358a7455",
+      "name": "Arctic White",
+      "code": "WXW0050L",
+      "hex": "#fafaf8"
+    },
+    {
+      "id": "701e35cc",
+      "name": "Arctic White - G100",
+      "code": "WXW0063L",
+      "hex": "#dae6e5"
+    },
+    {
+      "id": "5ca173e3",
+      "name": "Shiny Black",
+      "code": "WXA1549L",
+      "hex": "#000000"
+    },
+    {
+      "id": "7a346e29",
+      "name": "Evergreen/Hunter Green",
+      "code": "WXG0021L",
+      "hex": "#273c30"
+    },
+    {
+      "id": "86075dac",
+      "name": "Bright Red",
+      "code": "WXR0084",
+      "hex": "#bf2b2f"
+    },
+    {
+      "id": "b2af99a5",
+      "name": "Ocean Blue",
+      "code": "WXL0028L",
+      "hex": "#3d5f71"
+    },
+    {
+      "id": "3a417aaa",
+      "name": "Dark Green",
+      "code": "WXG0020L",
+      "hex": "#355e3b"
+    },
+    {
+      "id": "aae12c2e",
+      "name": "Gallery Blue",
+      "code": "WXL0046L",
+      "hex": "#9bbce4"
+    },
+    {
+      "id": "87bce8d5",
+      "name": "Duracoat Native Copper",
+      "code": "DC151R-2159CR",
+      "hex": "#9c6649"
+    },
+    {
+      "id": "ffd47b41",
+      "name": "Ash Gray - Crinkle",
+      "code": "WXA0126T",
+      "hex": "#808080"
+    },
+    {
+      "id": "59f0f511",
+      "name": "Burnished Slate - Crinkle",
+      "code": "WXB1017T",
+      "hex": "#5a534d"
+    },
+    {
+      "id": "71185bad",
+      "name": "Charcoal - Crinkle",
+      "code": "WXA0111T",
+      "hex": "#3e4042"
+    },
+    {
+      "id": "09d75a44",
+      "name": "Cocoa Brown - Crinkle",
+      "code": "WXB1037T",
+      "hex": "#35281e"
+    },
+    {
+      "id": "912f850f",
+      "name": "Rustic Red - Crinkle",
+      "code": "WXR0128T",
+      "hex": "#703229"
+    },
+    {
+      "id": "fba71ac7",
+      "name": "Buckskin - Crinkle",
+      "code": "WXD0408T",
+      "hex": "#d4ba8c"
+    },
+    {
+      "id": "e66d6c59",
+      "name": "Black - Crinkle",
+      "code": "WXA0157T",
+      "hex": "#2f2f31"
+    },
+    {
+      "id": "a321af25",
+      "name": "Burgundy - Crinkle",
+      "code": "WXR0099T",
+      "hex": "#63333e"
+    },
+    {
+      "id": "38995a63",
+      "name": "Evergreen - Crinkle",
+      "code": "WXG0043T",
+      "hex": "#3d5b40"
+    },
+    {
+      "id": "9c7f3c2f",
+      "name": "Gallery Blue - Crinkle",
+      "code": "WXL0048T",
+      "hex": "#425566"
+    },
+    {
+      "id": "c7fa274f",
+      "name": "Taupe / Clay - Crinkle",
+      "code": "WXD0459T",
+      "hex": "#aea193"
+    },
+    {
+      "id": "51e3607d",
+      "name": "Brown",
+      "code": "",
+      "hex": "#5e3b3b"
+    },
+    {
+      "id": "0b8938e9",
+      "name": "Tan",
+      "code": "",
+      "hex": "#ae8f8f"
+    },
+    {
+      "id": "2774044e",
+      "name": "Ash Gray",
+      "code": "",
+      "hex": "#9ea09e"
+    },
+    {
+      "id": "1e7948ac",
+      "name": "Light Stone",
+      "code": "",
+      "hex": "#cfc8b6"
+    },
+    {
+      "id": "b07abcc8",
+      "name": "Hunter Green",
+      "code": "",
+      "hex": "#2a5138"
+    },
+    {
+      "id": "f7217c6f",
+      "name": "Brilliant White",
+      "code": "",
+      "hex": "#f0f0ec"
+    },
+    {
+      "id": "8bea1046",
+      "name": "Taupe",
+      "code": "",
+      "hex": "#9e8e7c"
+    },
+    {
+      "id": "6e0e7d94",
+      "name": "Brite Red",
+      "code": "",
+      "hex": "#c2281a"
+    },
+    {
+      "id": "9c2717f2",
+      "name": "Copper Metallic",
+      "code": "",
+      "hex": "#b07840"
+    },
+    {
+      "id": "6895d66a",
+      "name": "Matte Black",
+      "code": "",
+      "hex": "#252525"
+    },
+    {
+      "id": "7e64e67e",
+      "name": "Black",
+      "code": "",
+      "hex": "#000000"
+    },
+    {
+      "id": "72a57b50",
+      "name": "Clear",
+      "code": "",
+      "hex": ""
+    },
+    {
+      "id": "d6389781",
+      "name": "White",
+      "code": "",
+      "hex": "#fffafa"
+    },
+    {
+      "id": "c42ed72e",
+      "name": "gray",
+      "code": "",
+      "hex": "#808080"
+    },
+    {
+      "id": "336e88f7",
+      "name": "Grey",
+      "code": "",
+      "hex": ""
+    }
+  ],
+  "products": [
+    {
+      "id": "388b1e3a",
+      "name": "Ridge Cap",
+      "category": "trim",
+      "sku_prefix": "",
+      "unit": "lin ft",
+      "price": 0,
+      "priceUnit": "lin ft",
+      "description": "Ridge cap trim, 26 GA.",
+      "notes": "",
+      "variations": [
+        {
+          "id": "e3019e24",
+          "name": "26 GA Smooth",
+          "sku": "",
+          "price": 1.6,
+          "priceUnit": "lin ft",
+          "colors": [
+            "51e3607d",
+            "0b8938e9",
+            "2774044e",
+            "19b27be1",
+            "1e7948ac",
+            "b07abcc8",
+            "31e65ac6",
+            "5ea05961",
+            "b2af99a5",
+            "f7217c6f",
+            "66aa7518",
+            "8bea1046",
+            "6ccdcbac",
+            "aae12c2e",
+            "6e0e7d94",
+            "3a417aaa",
+            "9c2717f2",
+            "270a1def",
+            "6895d66a",
+            "3822c36c"
+          ],
+          "notes": ""
+        },
+        {
+          "id": "6e684fc8",
+          "name": "26 GA Crinkle",
+          "sku": "",
+          "price": 1.6,
+          "priceUnit": "lin ft",
+          "colors": [
+            "ffd47b41",
+            "59f0f511",
+            "71185bad",
+            "09d75a44",
+            "912f850f",
+            "fba71ac7",
+            "e66d6c59",
+            "a321af25",
+            "38995a63",
+            "9c7f3c2f",
+            "c7fa274f"
+          ],
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "3af910e5",
+      "name": "Corners (4\")",
+      "category": "trim",
+      "sku_prefix": "",
+      "unit": "lin ft",
+      "price": 0,
+      "priceUnit": "lin ft",
+      "description": "4\" outside corner trim, 26 GA.",
+      "notes": "",
+      "variations": [
+        {
+          "id": "4436f88d",
+          "name": "26 GA Smooth",
+          "sku": "",
+          "price": 1.75,
+          "priceUnit": "lin ft",
+          "colors": [
+            "51e3607d",
+            "0b8938e9",
+            "2774044e",
+            "19b27be1",
+            "1e7948ac",
+            "b07abcc8",
+            "31e65ac6",
+            "5ea05961",
+            "b2af99a5",
+            "f7217c6f",
+            "66aa7518",
+            "8bea1046",
+            "6ccdcbac",
+            "aae12c2e",
+            "6e0e7d94",
+            "3a417aaa",
+            "9c2717f2",
+            "270a1def",
+            "6895d66a",
+            "3822c36c"
+          ],
+          "notes": ""
+        },
+        {
+          "id": "2315d67f",
+          "name": "26 GA Crinkle",
+          "sku": "",
+          "price": 1.75,
+          "priceUnit": "lin ft",
+          "colors": [
+            "ffd47b41",
+            "59f0f511",
+            "71185bad",
+            "09d75a44",
+            "912f850f",
+            "fba71ac7",
+            "e66d6c59",
+            "a321af25",
+            "38995a63",
+            "9c7f3c2f",
+            "c7fa274f"
+          ],
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "92eb7b87",
+      "name": "Inside Corner",
+      "category": "trim",
+      "sku_prefix": "",
+      "unit": "lin ft",
+      "price": 0,
+      "priceUnit": "lin ft",
+      "description": "Inside corner trim, 26 GA.",
+      "notes": "",
+      "variations": [
+        {
+          "id": "d9812c21",
+          "name": "26 GA Smooth",
+          "sku": "",
+          "price": 1.75,
+          "priceUnit": "lin ft",
+          "colors": [
+            "51e3607d",
+            "0b8938e9",
+            "2774044e",
+            "19b27be1",
+            "1e7948ac",
+            "b07abcc8",
+            "31e65ac6",
+            "5ea05961",
+            "b2af99a5",
+            "f7217c6f",
+            "66aa7518",
+            "8bea1046",
+            "6ccdcbac",
+            "aae12c2e",
+            "6e0e7d94",
+            "3a417aaa",
+            "9c2717f2",
+            "270a1def",
+            "6895d66a",
+            "3822c36c"
+          ],
+          "notes": ""
+        },
+        {
+          "id": "a45729a2",
+          "name": "26 GA Crinkle",
+          "sku": "",
+          "price": 1.75,
+          "priceUnit": "lin ft",
+          "colors": [
+            "ffd47b41",
+            "59f0f511",
+            "71185bad",
+            "09d75a44",
+            "912f850f",
+            "fba71ac7",
+            "e66d6c59",
+            "a321af25",
+            "38995a63",
+            "9c7f3c2f",
+            "c7fa274f"
+          ],
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "e133023e",
+      "name": "Mini Corner (Residential Rake)",
+      "category": "trim",
+      "sku_prefix": "",
+      "unit": "lin ft",
+      "price": 0,
+      "priceUnit": "lin ft",
+      "description": "Mini corner / residential rake trim, 26 GA.",
+      "notes": "",
+      "variations": [
+        {
+          "id": "d3d7d053",
+          "name": "26 GA Smooth",
+          "sku": "",
+          "price": 1.35,
+          "priceUnit": "lin ft",
+          "colors": [
+            "51e3607d",
+            "0b8938e9",
+            "2774044e",
+            "19b27be1",
+            "1e7948ac",
+            "b07abcc8",
+            "31e65ac6",
+            "5ea05961",
+            "b2af99a5",
+            "f7217c6f",
+            "66aa7518",
+            "8bea1046",
+            "6ccdcbac",
+            "aae12c2e",
+            "6e0e7d94",
+            "3a417aaa",
+            "9c2717f2",
+            "270a1def",
+            "6895d66a",
+            "3822c36c"
+          ],
+          "notes": ""
+        },
+        {
+          "id": "2ce9d90e",
+          "name": "26 GA Crinkle",
+          "sku": "",
+          "price": 1.35,
+          "priceUnit": "lin ft",
+          "colors": [
+            "ffd47b41",
+            "59f0f511",
+            "71185bad",
+            "09d75a44",
+            "912f850f",
+            "fba71ac7",
+            "e66d6c59",
+            "a321af25",
+            "38995a63",
+            "9c7f3c2f",
+            "c7fa274f"
+          ],
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "f236bb96",
+      "name": "Rake Trim",
+      "category": "trim",
+      "sku_prefix": "",
+      "unit": "lin ft",
+      "price": 0,
+      "priceUnit": "lin ft",
+      "description": "Residential rake trim, 26 GA.",
+      "notes": "",
+      "variations": [
+        {
+          "id": "bfe290d7",
+          "name": "26 GA Smooth",
+          "sku": "",
+          "price": 1.6,
+          "priceUnit": "lin ft",
+          "colors": [
+            "51e3607d",
+            "0b8938e9",
+            "2774044e",
+            "19b27be1",
+            "1e7948ac",
+            "b07abcc8",
+            "31e65ac6",
+            "5ea05961",
+            "b2af99a5",
+            "f7217c6f",
+            "66aa7518",
+            "8bea1046",
+            "6ccdcbac",
+            "aae12c2e",
+            "6e0e7d94",
+            "3a417aaa",
+            "9c2717f2",
+            "270a1def",
+            "6895d66a",
+            "3822c36c"
+          ],
+          "notes": ""
+        },
+        {
+          "id": "72504fc5",
+          "name": "26 GA Crinkle",
+          "sku": "",
+          "price": 1.6,
+          "priceUnit": "lin ft",
+          "colors": [
+            "ffd47b41",
+            "59f0f511",
+            "71185bad",
+            "09d75a44",
+            "912f850f",
+            "fba71ac7",
+            "e66d6c59",
+            "a321af25",
+            "38995a63",
+            "9c7f3c2f",
+            "c7fa274f"
+          ],
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "bf50a07e",
+      "name": "Overhead Door Trim",
+      "category": "trim",
+      "sku_prefix": "",
+      "unit": "lin ft",
+      "price": 0,
+      "priceUnit": "lin ft",
+      "description": "Overhead door trim, 26 GA.",
+      "notes": "",
+      "variations": [
+        {
+          "id": "328f6f43",
+          "name": "26 GA Smooth",
+          "sku": "",
+          "price": 1.7,
+          "priceUnit": "lin ft",
+          "colors": [
+            "51e3607d",
+            "0b8938e9",
+            "2774044e",
+            "19b27be1",
+            "1e7948ac",
+            "b07abcc8",
+            "31e65ac6",
+            "5ea05961",
+            "b2af99a5",
+            "f7217c6f",
+            "66aa7518",
+            "8bea1046",
+            "6ccdcbac",
+            "aae12c2e",
+            "6e0e7d94",
+            "3a417aaa",
+            "9c2717f2",
+            "270a1def",
+            "6895d66a",
+            "3822c36c"
+          ],
+          "notes": ""
+        },
+        {
+          "id": "fabb065c",
+          "name": "26 GA Crinkle",
+          "sku": "",
+          "price": 1.7,
+          "priceUnit": "lin ft",
+          "colors": [
+            "ffd47b41",
+            "59f0f511",
+            "71185bad",
+            "09d75a44",
+            "912f850f",
+            "fba71ac7",
+            "e66d6c59",
+            "a321af25",
+            "38995a63",
+            "9c7f3c2f",
+            "c7fa274f"
+          ],
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "d12e5b0b",
+      "name": "Round Track Cover",
+      "category": "trim",
+      "sku_prefix": "",
+      "unit": "lin ft",
+      "price": 0,
+      "priceUnit": "lin ft",
+      "description": "Round track cover trim, 26 GA.",
+      "notes": "",
+      "variations": [
+        {
+          "id": "5af38bd5",
+          "name": "26 GA Smooth",
+          "sku": "",
+          "price": 1.6,
+          "priceUnit": "lin ft",
+          "colors": [
+            "51e3607d",
+            "0b8938e9",
+            "2774044e",
+            "19b27be1",
+            "1e7948ac",
+            "b07abcc8",
+            "31e65ac6",
+            "5ea05961",
+            "b2af99a5",
+            "f7217c6f",
+            "66aa7518",
+            "8bea1046",
+            "6ccdcbac",
+            "aae12c2e",
+            "6e0e7d94",
+            "3a417aaa",
+            "9c2717f2",
+            "270a1def",
+            "6895d66a",
+            "3822c36c"
+          ],
+          "notes": ""
+        },
+        {
+          "id": "7628183b",
+          "name": "26 GA Crinkle",
+          "sku": "",
+          "price": 1.6,
+          "priceUnit": "lin ft",
+          "colors": [
+            "ffd47b41",
+            "59f0f511",
+            "71185bad",
+            "09d75a44",
+            "912f850f",
+            "fba71ac7",
+            "e66d6c59",
+            "a321af25",
+            "38995a63",
+            "9c7f3c2f",
+            "c7fa274f"
+          ],
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "3c12b908",
+      "name": "Residential Valley",
+      "category": "trim",
+      "sku_prefix": "",
+      "unit": "lin ft",
+      "price": 0,
+      "priceUnit": "lin ft",
+      "description": "Residential valley trim. ($21.10 per 10.5 ft piece)",
+      "notes": "10.5 ft pieces \u2014 $21.10 each",
+      "variations": [
+        {
+          "id": "d613b967",
+          "name": "26 GA Smooth",
+          "sku": "",
+          "price": 2.01,
+          "priceUnit": "lin ft",
+          "colors": [
+            "51e3607d",
+            "0b8938e9",
+            "2774044e",
+            "19b27be1",
+            "1e7948ac",
+            "b07abcc8",
+            "31e65ac6",
+            "5ea05961",
+            "b2af99a5",
+            "f7217c6f",
+            "66aa7518",
+            "8bea1046",
+            "6ccdcbac",
+            "aae12c2e",
+            "6e0e7d94",
+            "3a417aaa",
+            "9c2717f2",
+            "270a1def",
+            "6895d66a",
+            "3822c36c"
+          ],
+          "notes": ""
+        },
+        {
+          "id": "da04b6a1",
+          "name": "26 GA Crinkle",
+          "sku": "",
+          "price": 2.01,
+          "priceUnit": "lin ft",
+          "colors": [
+            "ffd47b41",
+            "59f0f511",
+            "71185bad",
+            "09d75a44",
+            "912f850f",
+            "fba71ac7",
+            "e66d6c59",
+            "a321af25",
+            "38995a63",
+            "9c7f3c2f",
+            "c7fa274f"
+          ],
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "0cd8f153",
+      "name": "Transition",
+      "category": "trim",
+      "sku_prefix": "",
+      "unit": "lin ft",
+      "price": 0,
+      "priceUnit": "lin ft",
+      "description": "Transition trim, 26 GA.",
+      "notes": "",
+      "variations": [
+        {
+          "id": "205405c6",
+          "name": "26 GA Smooth",
+          "sku": "",
+          "price": 1.7,
+          "priceUnit": "lin ft",
+          "colors": [
+            "51e3607d",
+            "0b8938e9",
+            "2774044e",
+            "19b27be1",
+            "1e7948ac",
+            "b07abcc8",
+            "31e65ac6",
+            "5ea05961",
+            "b2af99a5",
+            "f7217c6f",
+            "66aa7518",
+            "8bea1046",
+            "6ccdcbac",
+            "aae12c2e",
+            "6e0e7d94",
+            "3a417aaa",
+            "9c2717f2",
+            "270a1def",
+            "6895d66a",
+            "3822c36c"
+          ],
+          "notes": ""
+        },
+        {
+          "id": "65904480",
+          "name": "26 GA Crinkle",
+          "sku": "",
+          "price": 1.7,
+          "priceUnit": "lin ft",
+          "colors": [
+            "ffd47b41",
+            "59f0f511",
+            "71185bad",
+            "09d75a44",
+            "912f850f",
+            "fba71ac7",
+            "e66d6c59",
+            "a321af25",
+            "38995a63",
+            "9c7f3c2f",
+            "c7fa274f"
+          ],
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "04076591",
+      "name": "Hip Cap",
+      "category": "trim",
+      "sku_prefix": "",
+      "unit": "lin ft",
+      "price": 0,
+      "priceUnit": "lin ft",
+      "description": "Hip cap trim, 26 GA.",
+      "notes": "",
+      "variations": [
+        {
+          "id": "9f6c2a16",
+          "name": "26 GA Smooth",
+          "sku": "",
+          "price": 1.7,
+          "priceUnit": "lin ft",
+          "colors": [
+            "51e3607d",
+            "0b8938e9",
+            "2774044e",
+            "19b27be1",
+            "1e7948ac",
+            "b07abcc8",
+            "31e65ac6",
+            "5ea05961",
+            "b2af99a5",
+            "f7217c6f",
+            "66aa7518",
+            "8bea1046",
+            "6ccdcbac",
+            "aae12c2e",
+            "6e0e7d94",
+            "3a417aaa",
+            "9c2717f2",
+            "270a1def",
+            "6895d66a",
+            "3822c36c"
+          ],
+          "notes": ""
+        },
+        {
+          "id": "507fcad2",
+          "name": "26 GA Crinkle",
+          "sku": "",
+          "price": 1.7,
+          "priceUnit": "lin ft",
+          "colors": [
+            "ffd47b41",
+            "59f0f511",
+            "71185bad",
+            "09d75a44",
+            "912f850f",
+            "fba71ac7",
+            "e66d6c59",
+            "a321af25",
+            "38995a63",
+            "9c7f3c2f",
+            "c7fa274f"
+          ],
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "058aa163",
+      "name": "End Wall",
+      "category": "trim",
+      "sku_prefix": "",
+      "unit": "lin ft",
+      "price": 0,
+      "priceUnit": "lin ft",
+      "description": "End wall trim, 26 GA.",
+      "notes": "",
+      "variations": [
+        {
+          "id": "feba31b8",
+          "name": "26 GA Smooth",
+          "sku": "",
+          "price": 1.7,
+          "priceUnit": "lin ft",
+          "colors": [
+            "51e3607d",
+            "0b8938e9",
+            "2774044e",
+            "19b27be1",
+            "1e7948ac",
+            "b07abcc8",
+            "31e65ac6",
+            "5ea05961",
+            "b2af99a5",
+            "f7217c6f",
+            "66aa7518",
+            "8bea1046",
+            "6ccdcbac",
+            "aae12c2e",
+            "6e0e7d94",
+            "3a417aaa",
+            "9c2717f2",
+            "270a1def",
+            "6895d66a",
+            "3822c36c"
+          ],
+          "notes": ""
+        },
+        {
+          "id": "041063f0",
+          "name": "26 GA Crinkle",
+          "sku": "",
+          "price": 1.7,
+          "priceUnit": "lin ft",
+          "colors": [
+            "ffd47b41",
+            "59f0f511",
+            "71185bad",
+            "09d75a44",
+            "912f850f",
+            "fba71ac7",
+            "e66d6c59",
+            "a321af25",
+            "38995a63",
+            "9c7f3c2f",
+            "c7fa274f"
+          ],
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "ab16e2bb",
+      "name": "Side Wall",
+      "category": "trim",
+      "sku_prefix": "",
+      "unit": "lin ft",
+      "price": 0,
+      "priceUnit": "lin ft",
+      "description": "Side wall trim, 26 GA.",
+      "notes": "",
+      "variations": [
+        {
+          "id": "95830728",
+          "name": "26 GA Smooth",
+          "sku": "",
+          "price": 1.7,
+          "priceUnit": "lin ft",
+          "colors": [
+            "51e3607d",
+            "0b8938e9",
+            "2774044e",
+            "19b27be1",
+            "1e7948ac",
+            "b07abcc8",
+            "31e65ac6",
+            "5ea05961",
+            "b2af99a5",
+            "f7217c6f",
+            "66aa7518",
+            "8bea1046",
+            "6ccdcbac",
+            "aae12c2e",
+            "6e0e7d94",
+            "3a417aaa",
+            "9c2717f2",
+            "270a1def",
+            "6895d66a",
+            "3822c36c"
+          ],
+          "notes": ""
+        },
+        {
+          "id": "5c6e5769",
+          "name": "26 GA Crinkle",
+          "sku": "",
+          "price": 1.7,
+          "priceUnit": "lin ft",
+          "colors": [
+            "ffd47b41",
+            "59f0f511",
+            "71185bad",
+            "09d75a44",
+            "912f850f",
+            "fba71ac7",
+            "e66d6c59",
+            "a321af25",
+            "38995a63",
+            "9c7f3c2f",
+            "c7fa274f"
+          ],
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "4a747227",
+      "name": "Drip Edge",
+      "category": "trim",
+      "sku_prefix": "",
+      "unit": "lin ft",
+      "price": 0,
+      "priceUnit": "lin ft",
+      "description": "Drip edge trim, 26 GA.",
+      "notes": "",
+      "variations": [
+        {
+          "id": "a38a75ee",
+          "name": "26 GA Smooth",
+          "sku": "",
+          "price": 1.0,
+          "priceUnit": "lin ft",
+          "colors": [
+            "51e3607d",
+            "0b8938e9",
+            "2774044e",
+            "19b27be1",
+            "1e7948ac",
+            "b07abcc8",
+            "31e65ac6",
+            "5ea05961",
+            "b2af99a5",
+            "f7217c6f",
+            "66aa7518",
+            "8bea1046",
+            "6ccdcbac",
+            "aae12c2e",
+            "6e0e7d94",
+            "3a417aaa",
+            "9c2717f2",
+            "270a1def",
+            "6895d66a",
+            "3822c36c"
+          ],
+          "notes": ""
+        },
+        {
+          "id": "b394c383",
+          "name": "26 GA Crinkle",
+          "sku": "",
+          "price": 1.0,
+          "priceUnit": "lin ft",
+          "colors": [
+            "ffd47b41",
+            "59f0f511",
+            "71185bad",
+            "09d75a44",
+            "912f850f",
+            "fba71ac7",
+            "e66d6c59",
+            "a321af25",
+            "38995a63",
+            "9c7f3c2f",
+            "c7fa274f"
+          ],
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "9a25f819",
+      "name": "Z Bar",
+      "category": "trim",
+      "sku_prefix": "",
+      "unit": "lin ft",
+      "price": 0,
+      "priceUnit": "lin ft",
+      "description": "Z bar trim, 26 GA.",
+      "notes": "",
+      "variations": [
+        {
+          "id": "4a18df94",
+          "name": "26 GA Smooth",
+          "sku": "",
+          "price": 0.7,
+          "priceUnit": "lin ft",
+          "colors": [
+            "51e3607d",
+            "0b8938e9",
+            "2774044e",
+            "19b27be1",
+            "1e7948ac",
+            "b07abcc8",
+            "31e65ac6",
+            "5ea05961",
+            "b2af99a5",
+            "f7217c6f",
+            "66aa7518",
+            "8bea1046",
+            "6ccdcbac",
+            "aae12c2e",
+            "6e0e7d94",
+            "3a417aaa",
+            "9c2717f2",
+            "270a1def",
+            "6895d66a",
+            "3822c36c"
+          ],
+          "notes": ""
+        },
+        {
+          "id": "f2c3c9c1",
+          "name": "26 GA Crinkle",
+          "sku": "",
+          "price": 0.7,
+          "priceUnit": "lin ft",
+          "colors": [
+            "ffd47b41",
+            "59f0f511",
+            "71185bad",
+            "09d75a44",
+            "912f850f",
+            "fba71ac7",
+            "e66d6c59",
+            "a321af25",
+            "38995a63",
+            "9c7f3c2f",
+            "c7fa274f"
+          ],
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "9bef5aa7",
+      "name": "Rat Guard",
+      "category": "trim",
+      "sku_prefix": "",
+      "unit": "lin ft",
+      "price": 0,
+      "priceUnit": "lin ft",
+      "description": "Rat guard trim.",
+      "notes": "",
+      "variations": [
+        {
+          "id": "627c2618",
+          "name": "26 GA Smooth",
+          "sku": "",
+          "price": 0.7,
+          "priceUnit": "lin ft",
+          "colors": [
+            "51e3607d",
+            "0b8938e9",
+            "2774044e",
+            "19b27be1",
+            "1e7948ac",
+            "b07abcc8",
+            "31e65ac6",
+            "5ea05961",
+            "b2af99a5",
+            "f7217c6f",
+            "66aa7518",
+            "8bea1046",
+            "6ccdcbac",
+            "aae12c2e",
+            "6e0e7d94",
+            "3a417aaa",
+            "9c2717f2",
+            "270a1def",
+            "6895d66a",
+            "3822c36c"
+          ],
+          "notes": ""
+        },
+        {
+          "id": "ec5e0ab7",
+          "name": "26 GA Crinkle",
+          "sku": "",
+          "price": 0.7,
+          "priceUnit": "lin ft",
+          "colors": [
+            "ffd47b41",
+            "59f0f511",
+            "71185bad",
+            "09d75a44",
+            "912f850f",
+            "fba71ac7",
+            "e66d6c59",
+            "a321af25",
+            "38995a63",
+            "9c7f3c2f",
+            "c7fa274f"
+          ],
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "30e7c79c",
+      "name": "J-Trim",
+      "category": "trim",
+      "sku_prefix": "",
+      "unit": "lin ft",
+      "price": 0,
+      "priceUnit": "lin ft",
+      "description": "J-trim, 26 GA.",
+      "notes": "",
+      "variations": [
+        {
+          "id": "96ceb0c8",
+          "name": "26 GA Smooth",
+          "sku": "",
+          "price": 0.7,
+          "priceUnit": "lin ft",
+          "colors": [
+            "51e3607d",
+            "0b8938e9",
+            "2774044e",
+            "19b27be1",
+            "1e7948ac",
+            "b07abcc8",
+            "31e65ac6",
+            "5ea05961",
+            "b2af99a5",
+            "f7217c6f",
+            "66aa7518",
+            "8bea1046",
+            "6ccdcbac",
+            "aae12c2e",
+            "6e0e7d94",
+            "3a417aaa",
+            "9c2717f2",
+            "270a1def",
+            "6895d66a",
+            "3822c36c"
+          ],
+          "notes": ""
+        },
+        {
+          "id": "f1a6c967",
+          "name": "26 GA Crinkle",
+          "sku": "",
+          "price": 0.7,
+          "priceUnit": "lin ft",
+          "colors": [
+            "ffd47b41",
+            "59f0f511",
+            "71185bad",
+            "09d75a44",
+            "912f850f",
+            "fba71ac7",
+            "e66d6c59",
+            "a321af25",
+            "38995a63",
+            "9c7f3c2f",
+            "c7fa274f"
+          ],
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "b0c3ba02",
+      "name": "Drip Cap",
+      "category": "trim",
+      "sku_prefix": "",
+      "unit": "lin ft",
+      "price": 0,
+      "priceUnit": "lin ft",
+      "description": "Drip cap trim.",
+      "notes": "",
+      "variations": [
+        {
+          "id": "2d272458",
+          "name": "26 GA Smooth",
+          "sku": "",
+          "price": 0.7,
+          "priceUnit": "lin ft",
+          "colors": [
+            "51e3607d",
+            "0b8938e9",
+            "2774044e",
+            "19b27be1",
+            "1e7948ac",
+            "b07abcc8",
+            "31e65ac6",
+            "5ea05961",
+            "b2af99a5",
+            "f7217c6f",
+            "66aa7518",
+            "8bea1046",
+            "6ccdcbac",
+            "aae12c2e",
+            "6e0e7d94",
+            "3a417aaa",
+            "9c2717f2",
+            "270a1def",
+            "6895d66a",
+            "3822c36c"
+          ],
+          "notes": ""
+        },
+        {
+          "id": "199a4a4d",
+          "name": "26 GA Crinkle",
+          "sku": "",
+          "price": 0.7,
+          "priceUnit": "lin ft",
+          "colors": [
+            "ffd47b41",
+            "59f0f511",
+            "71185bad",
+            "09d75a44",
+            "912f850f",
+            "fba71ac7",
+            "e66d6c59",
+            "a321af25",
+            "38995a63",
+            "9c7f3c2f",
+            "c7fa274f"
+          ],
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "dfcf4390",
+      "name": "F Channel",
+      "category": "trim",
+      "sku_prefix": "",
+      "unit": "lin ft",
+      "price": 0,
+      "priceUnit": "lin ft",
+      "description": "F channel trim.",
+      "notes": "",
+      "variations": [
+        {
+          "id": "81f9c94a",
+          "name": "26 GA Smooth",
+          "sku": "",
+          "price": 0.9,
+          "priceUnit": "lin ft",
+          "colors": [
+            "51e3607d",
+            "0b8938e9",
+            "2774044e",
+            "19b27be1",
+            "1e7948ac",
+            "b07abcc8",
+            "31e65ac6",
+            "5ea05961",
+            "b2af99a5",
+            "f7217c6f",
+            "66aa7518",
+            "8bea1046",
+            "6ccdcbac",
+            "aae12c2e",
+            "6e0e7d94",
+            "3a417aaa",
+            "9c2717f2",
+            "270a1def",
+            "6895d66a",
+            "3822c36c"
+          ],
+          "notes": ""
+        },
+        {
+          "id": "ec38a58d",
+          "name": "26 GA Crinkle",
+          "sku": "",
+          "price": 0.9,
+          "priceUnit": "lin ft",
+          "colors": [
+            "ffd47b41",
+            "59f0f511",
+            "71185bad",
+            "09d75a44",
+            "912f850f",
+            "fba71ac7",
+            "e66d6c59",
+            "a321af25",
+            "38995a63",
+            "9c7f3c2f",
+            "c7fa274f"
+          ],
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "c708224b",
+      "name": "F&J #1",
+      "category": "trim",
+      "sku_prefix": "",
+      "unit": "lin ft",
+      "price": 0,
+      "priceUnit": "lin ft",
+      "description": "F&J trim #1.",
+      "notes": "",
+      "variations": [
+        {
+          "id": "b20be6b4",
+          "name": "26 GA Smooth",
+          "sku": "",
+          "price": 1.4,
+          "priceUnit": "lin ft",
+          "colors": [
+            "51e3607d",
+            "0b8938e9",
+            "2774044e",
+            "19b27be1",
+            "1e7948ac",
+            "b07abcc8",
+            "31e65ac6",
+            "5ea05961",
+            "b2af99a5",
+            "f7217c6f",
+            "66aa7518",
+            "8bea1046",
+            "6ccdcbac",
+            "aae12c2e",
+            "6e0e7d94",
+            "3a417aaa",
+            "9c2717f2",
+            "270a1def",
+            "6895d66a",
+            "3822c36c"
+          ],
+          "notes": ""
+        },
+        {
+          "id": "fc00e550",
+          "name": "26 GA Crinkle",
+          "sku": "",
+          "price": 1.4,
+          "priceUnit": "lin ft",
+          "colors": [
+            "ffd47b41",
+            "59f0f511",
+            "71185bad",
+            "09d75a44",
+            "912f850f",
+            "fba71ac7",
+            "e66d6c59",
+            "a321af25",
+            "38995a63",
+            "9c7f3c2f",
+            "c7fa274f"
+          ],
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "857a9eb9",
+      "name": "F&J #2",
+      "category": "trim",
+      "sku_prefix": "",
+      "unit": "lin ft",
+      "price": 0,
+      "priceUnit": "lin ft",
+      "description": "F&J trim #2.",
+      "notes": "",
+      "variations": [
+        {
+          "id": "20a6ab58",
+          "name": "26 GA Smooth",
+          "sku": "",
+          "price": 0.9,
+          "priceUnit": "lin ft",
+          "colors": [
+            "51e3607d",
+            "0b8938e9",
+            "2774044e",
+            "19b27be1",
+            "1e7948ac",
+            "b07abcc8",
+            "31e65ac6",
+            "5ea05961",
+            "b2af99a5",
+            "f7217c6f",
+            "66aa7518",
+            "8bea1046",
+            "6ccdcbac",
+            "aae12c2e",
+            "6e0e7d94",
+            "3a417aaa",
+            "9c2717f2",
+            "270a1def",
+            "6895d66a",
+            "3822c36c"
+          ],
+          "notes": ""
+        },
+        {
+          "id": "782d8089",
+          "name": "26 GA Crinkle",
+          "sku": "",
+          "price": 0.9,
+          "priceUnit": "lin ft",
+          "colors": [
+            "ffd47b41",
+            "59f0f511",
+            "71185bad",
+            "09d75a44",
+            "912f850f",
+            "fba71ac7",
+            "e66d6c59",
+            "a321af25",
+            "38995a63",
+            "9c7f3c2f",
+            "c7fa274f"
+          ],
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "57874352",
+      "name": "Jamb Cover",
+      "category": "trim",
+      "sku_prefix": "",
+      "unit": "lin ft",
+      "price": 0,
+      "priceUnit": "lin ft",
+      "description": "Jamb cover trim.",
+      "notes": "",
+      "variations": [
+        {
+          "id": "800bdc0f",
+          "name": "26 GA Smooth",
+          "sku": "",
+          "price": 1.6,
+          "priceUnit": "lin ft",
+          "colors": [
+            "51e3607d",
+            "0b8938e9",
+            "2774044e",
+            "19b27be1",
+            "1e7948ac",
+            "b07abcc8",
+            "31e65ac6",
+            "5ea05961",
+            "b2af99a5",
+            "f7217c6f",
+            "66aa7518",
+            "8bea1046",
+            "6ccdcbac",
+            "aae12c2e",
+            "6e0e7d94",
+            "3a417aaa",
+            "9c2717f2",
+            "270a1def",
+            "6895d66a",
+            "3822c36c"
+          ],
+          "notes": ""
+        },
+        {
+          "id": "20085b39",
+          "name": "26 GA Crinkle",
+          "sku": "",
+          "price": 1.6,
+          "priceUnit": "lin ft",
+          "colors": [
+            "ffd47b41",
+            "59f0f511",
+            "71185bad",
+            "09d75a44",
+            "912f850f",
+            "fba71ac7",
+            "e66d6c59",
+            "a321af25",
+            "38995a63",
+            "9c7f3c2f",
+            "c7fa274f"
+          ],
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "f9d12b54",
+      "name": "Fascia Trim",
+      "category": "trim",
+      "sku_prefix": "",
+      "unit": "lin ft",
+      "price": 0,
+      "priceUnit": "lin ft",
+      "description": "Fascia trim in multiple widths, smooth or crinkle finish.",
+      "notes": "",
+      "variations": [
+        {
+          "id": "46aea047",
+          "name": "4\" Smooth",
+          "sku": "",
+          "price": 0.9,
+          "priceUnit": "lin ft",
+          "colors": [
+            "51e3607d",
+            "0b8938e9",
+            "2774044e",
+            "19b27be1",
+            "1e7948ac",
+            "b07abcc8",
+            "31e65ac6",
+            "5ea05961",
+            "b2af99a5",
+            "f7217c6f",
+            "66aa7518",
+            "8bea1046",
+            "6ccdcbac",
+            "aae12c2e",
+            "6e0e7d94",
+            "3a417aaa",
+            "9c2717f2",
+            "270a1def",
+            "6895d66a",
+            "3822c36c"
+          ],
+          "notes": ""
+        },
+        {
+          "id": "1ac81e52",
+          "name": "4\" Crinkle",
+          "sku": "",
+          "price": 0.9,
+          "priceUnit": "lin ft",
+          "colors": [
+            "ffd47b41",
+            "59f0f511",
+            "71185bad",
+            "09d75a44",
+            "912f850f",
+            "fba71ac7",
+            "e66d6c59",
+            "a321af25",
+            "38995a63",
+            "9c7f3c2f",
+            "c7fa274f"
+          ],
+          "notes": ""
+        },
+        {
+          "id": "df7c72cc",
+          "name": "5.5\" Smooth",
+          "sku": "",
+          "price": 1.0,
+          "priceUnit": "lin ft",
+          "colors": [
+            "51e3607d",
+            "0b8938e9",
+            "2774044e",
+            "19b27be1",
+            "1e7948ac",
+            "b07abcc8",
+            "31e65ac6",
+            "5ea05961",
+            "b2af99a5",
+            "f7217c6f",
+            "66aa7518",
+            "8bea1046",
+            "6ccdcbac",
+            "aae12c2e",
+            "6e0e7d94",
+            "3a417aaa",
+            "9c2717f2",
+            "270a1def",
+            "6895d66a",
+            "3822c36c"
+          ],
+          "notes": ""
+        },
+        {
+          "id": "dfa562a8",
+          "name": "5.5\" Crinkle",
+          "sku": "",
+          "price": 1.0,
+          "priceUnit": "lin ft",
+          "colors": [
+            "ffd47b41",
+            "59f0f511",
+            "71185bad",
+            "09d75a44",
+            "912f850f",
+            "fba71ac7",
+            "e66d6c59",
+            "a321af25",
+            "38995a63",
+            "9c7f3c2f",
+            "c7fa274f"
+          ],
+          "notes": ""
+        },
+        {
+          "id": "331ea002",
+          "name": "8\" Smooth",
+          "sku": "",
+          "price": 1.4,
+          "priceUnit": "lin ft",
+          "colors": [
+            "51e3607d",
+            "0b8938e9",
+            "2774044e",
+            "19b27be1",
+            "1e7948ac",
+            "b07abcc8",
+            "31e65ac6",
+            "5ea05961",
+            "b2af99a5",
+            "f7217c6f",
+            "66aa7518",
+            "8bea1046",
+            "6ccdcbac",
+            "aae12c2e",
+            "6e0e7d94",
+            "3a417aaa",
+            "9c2717f2",
+            "270a1def",
+            "6895d66a",
+            "3822c36c"
+          ],
+          "notes": ""
+        },
+        {
+          "id": "a3c2f49c",
+          "name": "8\" Crinkle",
+          "sku": "",
+          "price": 1.4,
+          "priceUnit": "lin ft",
+          "colors": [
+            "ffd47b41",
+            "59f0f511",
+            "71185bad",
+            "09d75a44",
+            "912f850f",
+            "fba71ac7",
+            "e66d6c59",
+            "a321af25",
+            "38995a63",
+            "9c7f3c2f",
+            "c7fa274f"
+          ],
+          "notes": ""
+        },
+        {
+          "id": "83e64554",
+          "name": "W/J Smooth",
+          "sku": "",
+          "price": 1.6,
+          "priceUnit": "lin ft",
+          "colors": [
+            "51e3607d",
+            "0b8938e9",
+            "2774044e",
+            "19b27be1",
+            "1e7948ac",
+            "b07abcc8",
+            "31e65ac6",
+            "5ea05961",
+            "b2af99a5",
+            "f7217c6f",
+            "66aa7518",
+            "8bea1046",
+            "6ccdcbac",
+            "aae12c2e",
+            "6e0e7d94",
+            "3a417aaa",
+            "9c2717f2",
+            "270a1def",
+            "6895d66a",
+            "3822c36c"
+          ],
+          "notes": ""
+        },
+        {
+          "id": "090f341b",
+          "name": "W/J Crinkle",
+          "sku": "",
+          "price": 1.6,
+          "priceUnit": "lin ft",
+          "colors": [
+            "ffd47b41",
+            "59f0f511",
+            "71185bad",
+            "09d75a44",
+            "912f850f",
+            "fba71ac7",
+            "e66d6c59",
+            "a321af25",
+            "38995a63",
+            "9c7f3c2f",
+            "c7fa274f"
+          ],
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "6cbc59a8",
+      "name": "Flat Stock",
+      "category": "trim",
+      "sku_prefix": "",
+      "unit": "sq ft",
+      "price": 4.1,
+      "priceUnit": "sq ft",
+      "description": "Flat stock sheet metal.",
+      "notes": "",
+      "variations": []
+    },
+    {
+      "id": "c72bbb1b",
+      "name": "Custom Trim / Specialty",
+      "category": "trim",
+      "sku_prefix": "",
+      "unit": "lin ft",
+      "price": 1.45,
+      "priceUnit": "lin ft",
+      "description": "Custom or specialty trim, made to order.",
+      "notes": "",
+      "variations": []
+    },
+    {
+      "id": "f1bf9072",
+      "name": "Ag Panel",
+      "category": "panel",
+      "sku_prefix": "",
+      "unit": "sq ft",
+      "price": 0,
+      "priceUnit": "sq ft",
+      "description": "Standard AG panel roofing and siding. Available in smooth and crinkle finish.",
+      "notes": "",
+      "variations": [
+        {
+          "id": "1038ada6",
+          "name": "28 GA Smooth",
+          "sku": "",
+          "price": 0,
+          "priceUnit": "sq ft",
+          "colors": [
+            "4d36056e",
+            "6ccdcbac",
+            "66aa7518",
+            "19b27be1",
+            "04e20129",
+            "a97a2f5c",
+            "3822c36c",
+            "1014f5ab",
+            "270a1def",
+            "5ea05961",
+            "a3407446",
+            "31e65ac6",
+            "358a7455",
+            "701e35cc",
+            "5ca173e3",
+            "7a346e29",
+            "86075dac",
+            "b2af99a5",
+            "3a417aaa",
+            "aae12c2e",
+            "87bce8d5"
+          ],
+          "notes": "See price sheet for current sq ft rate"
+        },
+        {
+          "id": "677b015c",
+          "name": "28 GA Crinkle",
+          "sku": "",
+          "price": 0,
+          "priceUnit": "sq ft",
+          "colors": [
+            "ffd47b41",
+            "59f0f511",
+            "71185bad",
+            "09d75a44",
+            "912f850f",
+            "fba71ac7",
+            "e66d6c59",
+            "a321af25",
+            "38995a63",
+            "9c7f3c2f",
+            "c7fa274f"
+          ],
+          "notes": "See price sheet for current sq ft rate"
+        }
+      ]
+    },
+    {
+      "id": "8f823bde",
+      "name": "Liner Panel",
+      "category": "panel",
+      "sku_prefix": "",
+      "unit": "sq ft",
+      "price": 2.85,
+      "priceUnit": "sq ft",
+      "description": "Liner panel for interior use.",
+      "notes": "",
+      "variations": []
+    },
+    {
+      "id": "21c8c3f6",
+      "name": "Galvalume Panel",
+      "category": "panel",
+      "sku_prefix": "",
+      "unit": "sq ft",
+      "price": 2.85,
+      "priceUnit": "sq ft",
+      "description": "Galvalume (bare zinc-aluminum coated) panel.",
+      "notes": "",
+      "variations": []
+    },
+    {
+      "id": "3022ea1d",
+      "name": "Copper Panel",
+      "category": "panel",
+      "sku_prefix": "",
+      "unit": "sq ft",
+      "price": 3.4,
+      "priceUnit": "sq ft",
+      "description": "Copper finish panel.",
+      "notes": "",
+      "variations": []
+    },
+    {
+      "id": "a778d64b",
+      "name": "26 GA Metal Panel",
+      "category": "panel",
+      "sku_prefix": "",
+      "unit": "sq ft",
+      "price": 3.6,
+      "priceUnit": "sq ft",
+      "description": "26 gauge metal panel.",
+      "notes": "",
+      "variations": []
+    },
+    {
+      "id": "3cd79b54",
+      "name": "Stamped Panel",
+      "category": "panel",
+      "sku_prefix": "",
+      "unit": "sq ft",
+      "price": 6.35,
+      "priceUnit": "sq ft",
+      "description": "Stamped metal panel.",
+      "notes": "",
+      "variations": []
+    },
+    {
+      "id": "b50cfed8",
+      "name": "Vented Soffit",
+      "category": "panel",
+      "sku_prefix": "",
+      "unit": "sq ft",
+      "price": 0.75,
+      "priceUnit": "sq ft",
+      "description": "Vented soffit panel.",
+      "notes": "",
+      "variations": []
+    },
+    {
+      "id": "c18eb777",
+      "name": "Aluminum Panel",
+      "category": "panel",
+      "sku_prefix": "",
+      "unit": "sq ft",
+      "price": 3.6,
+      "priceUnit": "sq ft",
+      "description": "Aluminum panel.",
+      "notes": "",
+      "variations": []
+    },
+    {
+      "id": "4820f4e3",
+      "name": "Board & Batten",
+      "category": "panel",
+      "sku_prefix": "",
+      "unit": "sq ft",
+      "price": 0,
+      "priceUnit": "sq ft",
+      "description": "Board and batten style metal panel.",
+      "notes": "",
+      "variations": [
+        {
+          "id": "ee4972f4",
+          "name": "Standard",
+          "sku": "",
+          "price": 1.9,
+          "priceUnit": "sq ft",
+          "colors": [],
+          "notes": ""
+        },
+        {
+          "id": "d95a0106",
+          "name": "Premium",
+          "sku": "",
+          "price": 2.4,
+          "priceUnit": "sq ft",
+          "colors": [],
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "91ab201d",
+      "name": "Standing Seam",
+      "category": "panel",
+      "sku_prefix": "",
+      "unit": "sq ft",
+      "price": 0,
+      "priceUnit": "sq ft",
+      "description": "Standing seam metal roofing panel.",
+      "notes": "",
+      "variations": [
+        {
+          "id": "eb1a36aa",
+          "name": "1\" Seam",
+          "sku": "",
+          "price": 2.35,
+          "priceUnit": "sq ft",
+          "colors": [],
+          "notes": ""
+        },
+        {
+          "id": "3404471a",
+          "name": "1.5\" Seam",
+          "sku": "",
+          "price": 2.4,
+          "priceUnit": "sq ft",
+          "colors": [],
+          "notes": ""
+        },
+        {
+          "id": "e9be7286",
+          "name": "2\" Seam",
+          "sku": "",
+          "price": 3.15,
+          "priceUnit": "sq ft",
+          "colors": [],
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "304f82ec",
+      "name": "Clear Light Panel (Sunlights)",
+      "category": "panel",
+      "sku_prefix": "",
+      "unit": "sq ft",
+      "price": 3.85,
+      "priceUnit": "lin ft",
+      "description": "Translucent clear light / skylight panels.",
+      "notes": "",
+      "variations": []
+    },
+    {
+      "id": "1c624996",
+      "name": "FloVent Ridge Vent",
+      "category": "ridge_cap",
+      "sku_prefix": "",
+      "unit": "lin ft",
+      "price": 0,
+      "priceUnit": "lin ft",
+      "description": "FloVent foam ridge vent. Roll of foam installed at ridge for ventilation. No color \u2014 functional product.",
+      "notes": "Roll product \u2014 no color options",
+      "variations": []
+    },
+    {
+      "id": "8d9b63c1",
+      "name": "Clear Light Ridge",
+      "category": "ridge_cap",
+      "sku_prefix": "",
+      "unit": "each",
+      "price": 38.5,
+      "priceUnit": "each",
+      "description": "Clear light ridge cap for translucent ridge panels.",
+      "notes": "",
+      "variations": []
+    },
+    {
+      "id": "bc0657e8",
+      "name": "Inside Closures",
+      "category": "accessory",
+      "sku_prefix": "",
+      "unit": "each",
+      "price": 0.96,
+      "priceUnit": "each",
+      "description": "Inside foam closures for AG panel eave or ridge.",
+      "notes": "",
+      "variations": []
+    },
+    {
+      "id": "38111a3f",
+      "name": "Outside Closures",
+      "category": "accessory",
+      "sku_prefix": "",
+      "unit": "each",
+      "price": 0.96,
+      "priceUnit": "each",
+      "description": "Outside foam closures for AG panel.",
+      "notes": "",
+      "variations": []
+    },
+    {
+      "id": "df6d3712",
+      "name": "Vented Closures",
+      "category": "accessory",
+      "sku_prefix": "",
+      "unit": "each",
+      "price": 5.5,
+      "priceUnit": "each",
+      "description": "Vented foam closures for ridge ventilation.",
+      "notes": "",
+      "variations": []
+    },
+    {
+      "id": "9860e136",
+      "name": "Snow Rail",
+      "category": "accessory",
+      "sku_prefix": "",
+      "unit": "each",
+      "price": 14.3,
+      "priceUnit": "each",
+      "description": "Snow rail / snow guard rail system.",
+      "notes": "",
+      "variations": []
+    },
+    {
+      "id": "dc3a4367",
+      "name": "Snow Guards",
+      "category": "accessory",
+      "sku_prefix": "",
+      "unit": "each",
+      "price": 4.5,
+      "priceUnit": "each",
+      "description": "Individual snow guards.",
+      "notes": "",
+      "variations": []
+    },
+    {
+      "id": "e7f97b9a",
+      "name": "Thermo Guard",
+      "category": "underlayment",
+      "sku_prefix": "",
+      "unit": "each",
+      "price": 130.0,
+      "priceUnit": "each",
+      "description": "Thermo guard thermal insulation blanket.",
+      "notes": "",
+      "variations": []
+    },
+    {
+      "id": "6462511a",
+      "name": "Double Bubble Underlayment",
+      "category": "underlayment",
+      "sku_prefix": "",
+      "unit": "roll",
+      "price": 0,
+      "priceUnit": "roll",
+      "description": "Double bubble reflective underlayment.",
+      "notes": "",
+      "variations": []
+    },
+    {
+      "id": "7bcaddeb",
+      "name": "Synthetic Underlayment",
+      "category": "underlayment",
+      "sku_prefix": "",
+      "unit": "roll",
+      "price": 0,
+      "priceUnit": "roll",
+      "description": "Synthetic felt underlayment.",
+      "notes": "",
+      "variations": []
+    },
+    {
+      "id": "6a960f8b",
+      "name": "Roof Vent",
+      "category": "accessory",
+      "sku_prefix": "",
+      "unit": "each",
+      "price": 0,
+      "priceUnit": "each",
+      "description": "AG panel roof vent.",
+      "notes": "",
+      "variations": [
+        {
+          "id": "b9b61d1f",
+          "name": "AG Panel Roof Vent",
+          "sku": "",
+          "price": 85.0,
+          "priceUnit": "each",
+          "colors": [
+            "7e64e67e"
+          ],
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "b1c730f6",
+      "name": "Skylight",
+      "category": "accessory",
+      "sku_prefix": "",
+      "unit": "lin ft",
+      "price": 3.85,
+      "priceUnit": "lin ft",
+      "description": "Skylight translucent panel.",
+      "notes": "",
+      "variations": []
+    },
+    {
+      "id": "5526a8ca",
+      "name": "Skylight Cap",
+      "category": "accessory",
+      "sku_prefix": "",
+      "unit": "each",
+      "price": 38.5,
+      "priceUnit": "each",
+      "description": "Skylight cap / ridge piece.",
+      "notes": "",
+      "variations": []
+    },
+    {
+      "id": "78a05857",
+      "name": "NovaFlex Roof Caulk",
+      "category": "sealant",
+      "sku_prefix": "",
+      "unit": "tube",
+      "price": 0,
+      "priceUnit": "tube",
+      "description": "NovaFlex sealant/caulk for metal roofing.",
+      "notes": "",
+      "variations": [
+        {
+          "id": "da020b01",
+          "name": "Clear",
+          "sku": "",
+          "price": 0,
+          "priceUnit": "tube",
+          "colors": [
+            "72a57b50"
+          ],
+          "notes": ""
+        },
+        {
+          "id": "96e121e2",
+          "name": "Black",
+          "sku": "",
+          "price": 0,
+          "priceUnit": "tube",
+          "colors": [
+            "7e64e67e"
+          ],
+          "notes": ""
+        },
+        {
+          "id": "e08251c1",
+          "name": "White",
+          "sku": "",
+          "price": 0,
+          "priceUnit": "tube",
+          "colors": [
+            "d6389781"
+          ],
+          "notes": ""
+        },
+        {
+          "id": "49e23d0d",
+          "name": "Alamo White",
+          "sku": "",
+          "price": 0,
+          "priceUnit": "tube",
+          "colors": [
+            "31e65ac6"
+          ],
+          "notes": ""
+        },
+        {
+          "id": "89b3ad07",
+          "name": "Gray",
+          "sku": "",
+          "price": 0,
+          "priceUnit": "tube",
+          "colors": [
+            "c42ed72e"
+          ],
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "1bd167bb",
+      "name": "EM Seal",
+      "category": "sealant",
+      "sku_prefix": "",
+      "unit": "each",
+      "price": 0,
+      "priceUnit": "each",
+      "description": "EM Seal butyl tape or foam sealant.",
+      "notes": "",
+      "variations": []
+    },
+    {
+      "id": "e68ce94b",
+      "name": "Rivets",
+      "category": "fastener",
+      "sku_prefix": "",
+      "unit": "pack",
+      "price": 0,
+      "priceUnit": "pack",
+      "description": "Aluminum rivets for metal panel work.",
+      "notes": "",
+      "variations": [
+        {
+          "id": "79d75394",
+          "name": "25 Count",
+          "sku": "",
+          "price": 2.3,
+          "priceUnit": "pack",
+          "colors": [],
+          "notes": ""
+        },
+        {
+          "id": "0751c8d6",
+          "name": "50 Count",
+          "sku": "",
+          "price": 4.5,
+          "priceUnit": "pack",
+          "colors": [],
+          "notes": ""
+        },
+        {
+          "id": "53ef99b7",
+          "name": "100 Count",
+          "sku": "",
+          "price": 8.95,
+          "priceUnit": "pack",
+          "colors": [],
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "d91a51e8",
+      "name": "AG Panel Screws",
+      "category": "fastener",
+      "sku_prefix": "",
+      "unit": "each",
+      "price": 0,
+      "priceUnit": "each",
+      "description": "Screws for AG panel installation.",
+      "notes": "",
+      "variations": [
+        {
+          "id": "27352f74",
+          "name": "Metal-to-Wood 1\"",
+          "sku": "",
+          "price": 0,
+          "priceUnit": "each",
+          "colors": [],
+          "notes": ""
+        },
+        {
+          "id": "0af37f69",
+          "name": "Metal-to-Wood 1.5\"",
+          "sku": "",
+          "price": 0,
+          "priceUnit": "each",
+          "colors": [],
+          "notes": ""
+        },
+        {
+          "id": "b6b30b06",
+          "name": "Metal-to-Wood 2\"",
+          "sku": "",
+          "price": 0,
+          "priceUnit": "each",
+          "colors": [],
+          "notes": ""
+        },
+        {
+          "id": "c0e8106e",
+          "name": "Metal-to-Metal 1.5\"",
+          "sku": "",
+          "price": 0,
+          "priceUnit": "each",
+          "colors": [
+            "7e64e67e",
+            "d6389781"
+          ],
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "0d891ac0",
+      "name": "Roof Boot",
+      "category": "accessory",
+      "sku_prefix": "",
+      "unit": "each",
+      "price": 0,
+      "priceUnit": "each",
+      "description": "Standard rubber roof pipe boots.",
+      "notes": "",
+      "variations": [
+        {
+          "id": "f2903c98",
+          "name": "Boot #3",
+          "sku": "",
+          "price": 16.5,
+          "priceUnit": "each",
+          "colors": [
+            "c42ed72e"
+          ],
+          "notes": ""
+        },
+        {
+          "id": "0c20c30d",
+          "name": "Boot #4",
+          "sku": "",
+          "price": 22.5,
+          "priceUnit": "each",
+          "colors": [
+            "c42ed72e"
+          ],
+          "notes": ""
+        },
+        {
+          "id": "0ee2038a",
+          "name": "Boot #5",
+          "sku": "",
+          "price": 24.5,
+          "priceUnit": "each",
+          "colors": [
+            "c42ed72e"
+          ],
+          "notes": ""
+        },
+        {
+          "id": "00bd74f0",
+          "name": "Boot #6",
+          "sku": "",
+          "price": 28.5,
+          "priceUnit": "each",
+          "colors": [
+            "c42ed72e"
+          ],
+          "notes": ""
+        },
+        {
+          "id": "de5f9129",
+          "name": "Boot #7",
+          "sku": "",
+          "price": 32.5,
+          "priceUnit": "each",
+          "colors": [
+            "c42ed72e"
+          ],
+          "notes": ""
+        },
+        {
+          "id": "566776df",
+          "name": "Boot #8",
+          "sku": "",
+          "price": 39.5,
+          "priceUnit": "each",
+          "colors": [
+            "c42ed72e"
+          ],
+          "notes": ""
+        },
+        {
+          "id": "35c044fb",
+          "name": "Boot #9",
+          "sku": "",
+          "price": 78.5,
+          "priceUnit": "each",
+          "colors": [
+            "c42ed72e"
+          ],
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "fa22750b",
+      "name": "Split Roof Boot",
+      "category": "accessory",
+      "sku_prefix": "",
+      "unit": "each",
+      "price": 0,
+      "priceUnit": "each",
+      "description": "Split rubber pipe boots for existing pipes.",
+      "notes": "",
+      "variations": [
+        {
+          "id": "92ccdbea",
+          "name": "Split Boot #4",
+          "sku": "",
+          "price": 38.5,
+          "priceUnit": "each",
+          "colors": [
+            "c42ed72e"
+          ],
+          "notes": ""
+        },
+        {
+          "id": "1f2a0bf8",
+          "name": "Split Boot #7",
+          "sku": "",
+          "price": 68.95,
+          "priceUnit": "each",
+          "colors": [
+            "c42ed72e"
+          ],
+          "notes": ""
+        },
+        {
+          "id": "e60539eb",
+          "name": "Split Boot #9",
+          "sku": "",
+          "price": 98.75,
+          "priceUnit": "each",
+          "colors": [
+            "c42ed72e"
+          ],
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "0d404251",
+      "name": "Hi-Temp Roof Boot",
+      "category": "accessory",
+      "sku_prefix": "",
+      "unit": "each",
+      "price": 0,
+      "priceUnit": "each",
+      "description": "High-temperature silicone pipe boots for wood stoves / fireplaces.",
+      "notes": "",
+      "variations": [
+        {
+          "id": "33923c38",
+          "name": "Hi-Temp #3",
+          "sku": "",
+          "price": 21.5,
+          "priceUnit": "each",
+          "colors": [
+            "c42ed72e"
+          ],
+          "notes": ""
+        },
+        {
+          "id": "7050e33a",
+          "name": "Hi-Temp #4",
+          "sku": "",
+          "price": 32.5,
+          "priceUnit": "each",
+          "colors": [
+            "c42ed72e"
+          ],
+          "notes": ""
+        },
+        {
+          "id": "7cc6bf43",
+          "name": "Hi-Temp #5",
+          "sku": "",
+          "price": 35.5,
+          "priceUnit": "each",
+          "colors": [
+            "c42ed72e"
+          ],
+          "notes": ""
+        },
+        {
+          "id": "1cb44da2",
+          "name": "Hi-Temp #7",
+          "sku": "",
+          "price": 70.75,
+          "priceUnit": "each",
+          "colors": [
+            "c42ed72e"
+          ],
+          "notes": ""
+        },
+        {
+          "id": "ffbda005",
+          "name": "Hi-Temp #8",
+          "sku": "",
+          "price": 90.95,
+          "priceUnit": "each",
+          "colors": [
+            "c42ed72e"
+          ],
+          "notes": ""
+        },
+        {
+          "id": "d193569c",
+          "name": "Hi-Temp #9",
+          "sku": "",
+          "price": 143.5,
+          "priceUnit": "each",
+          "colors": [
+            "c42ed72e"
+          ],
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "cac132b4",
+      "name": "Sliding Door System",
+      "category": "accessory",
+      "sku_prefix": "",
+      "unit": "each",
+      "price": 0,
+      "priceUnit": "each",
+      "description": "Sliding door hardware system components.",
+      "notes": "Multiple components \u2014 price per component",
+      "variations": []
+    },
+    {
+      "id": "c465f240",
+      "name": "Windows",
+      "category": "accessory",
+      "sku_prefix": "",
+      "unit": "each",
+      "price": 0,
+      "priceUnit": "each",
+      "description": "Metal building windows.",
+      "notes": "",
+      "variations": [
+        {
+          "id": "e210fc80",
+          "name": "3x3 Window",
+          "sku": "",
+          "price": 168.0,
+          "priceUnit": "each",
+          "colors": [],
+          "notes": ""
+        },
+        {
+          "id": "d7693f7e",
+          "name": "4x3 Window",
+          "sku": "",
+          "price": 190.0,
+          "priceUnit": "each",
+          "colors": [],
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "09332db1",
+      "name": "Doors",
+      "category": "accessory",
+      "sku_prefix": "",
+      "unit": "each",
+      "price": 0,
+      "priceUnit": "each",
+      "description": "Entry and walk doors for metal buildings.",
+      "notes": "",
+      "variations": [
+        {
+          "id": "59755c26",
+          "name": "AG Entry Door",
+          "sku": "",
+          "price": 410.0,
+          "priceUnit": "each",
+          "colors": [],
+          "notes": ""
+        },
+        {
+          "id": "29fd2b51",
+          "name": "4' AG Door",
+          "sku": "",
+          "price": 529.85,
+          "priceUnit": "each",
+          "colors": [],
+          "notes": ""
+        },
+        {
+          "id": "e405be7d",
+          "name": "Fiberglass Door (Standard)",
+          "sku": "",
+          "price": 315.0,
+          "priceUnit": "each",
+          "colors": [],
+          "notes": ""
+        },
+        {
+          "id": "fc3e5249",
+          "name": "Fiberglass Door (Premium)",
+          "sku": "",
+          "price": 395.0,
+          "priceUnit": "each",
+          "colors": [],
+          "notes": ""
+        }
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "id": "id_3ntr70p9mr9b8jcb",
+      "name": "Hip Cap System",
+      "sourceProductId": "id_z1hvmbgimr99ctax",
+      "sourceVariationId": null,
+      "condition": "per_ridge",
+      "conditionNote": "run foot for foot with hip cap",
+      "requires": [
+        {
+          "id": "id_kn81wuwjmr9b7iwj",
+          "productId": "id_rkitg780mr9ajhae",
+          "variationId": "",
+          "role": "foam_backer",
+          "quantityNote": "2' of emseal per foot of hip cap",
+          "required": false,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "id_zbv27fgsmr9baq33",
+      "name": "Valley System",
+      "sourceProductId": "id_m03ii2p9mr997zgf",
+      "sourceVariationId": null,
+      "condition": "always",
+      "conditionNote": null,
+      "requires": [
+        {
+          "id": "id_qr4wuprsmr9b9yi5",
+          "productId": "id_rkitg780mr9ajhae",
+          "variationId": "",
+          "role": "foam_backer",
+          "quantityNote": "2' of em seal per LF of valley",
+          "required": true,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "id_el7kkpx2mr9bcojj",
+      "name": "Endwall System",
+      "sourceProductId": "id_cpqmb867mr99uqve",
+      "sourceVariationId": null,
+      "condition": "always",
+      "conditionNote": null,
+      "requires": [
+        {
+          "id": "id_ka65g54wmr9bca6v",
+          "productId": "id_rkitg780mr9ajhae",
+          "variationId": "",
+          "role": "accessory",
+          "quantityNote": "",
+          "required": true,
+          "notes": ""
+        }
+      ]
+    }
+  ]
+}
