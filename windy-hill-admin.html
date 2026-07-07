@@ -1314,15 +1314,15 @@ async function openColorAssignModal(colorId) {
   document.body.style.overflow = 'hidden';
 
   var [prodsRes, catRes2, existRes] = await Promise.all([
-    db.from('products').select('id, name, sku, category_id').order('name'),
-    db.from('categories').select('id, name, systems(name)'),
+    db.from('products').select('id, name, sku, catalog_section').order('name'),
+    db.from('categories').select('id, name, catalog_section, systems(name)'),
     db.from('product_colors').select('product_id, price_modifier').eq('color_id', colorId)
   ]);
   var catMap2 = {};
-  (catRes2.data || []).forEach(function(c) { catMap2[c.id] = c; });
+  (catRes2.data || []).forEach(function(c) { if (c.catalog_section) catMap2[c.catalog_section] = c; });
 
   colorAssignState.allProducts = (prodsRes.data || []).map(function(p) {
-    p.categories = catMap2[p.category_id] || null; return p;
+    p.categories = catMap2[p.catalog_section] || null; return p;
   });
   colorAssignState.existing    = existRes.data || [];
 
@@ -1466,15 +1466,15 @@ async function openLengthAssignModal(lengthId) {
   document.body.style.overflow = 'hidden';
 
   var [prodsRes, catRes3, existRes] = await Promise.all([
-    db.from('products').select('id, name, sku, category_id').order('name'),
-    db.from('categories').select('id, name, systems(name)'),
+    db.from('products').select('id, name, sku, catalog_section').order('name'),
+    db.from('categories').select('id, name, catalog_section, systems(name)'),
     db.from('product_lengths').select('product_id').eq('length_option_id', lengthId)
   ]);
   var catMap3 = {};
-  (catRes3.data || []).forEach(function(c) { catMap3[c.id] = c; });
+  (catRes3.data || []).forEach(function(c) { if (c.catalog_section) catMap3[c.catalog_section] = c; });
 
   lengthAssignState.allProducts = (prodsRes.data || []).map(function(p) {
-    p.categories = catMap3[p.category_id] || null; return p;
+    p.categories = catMap3[p.catalog_section] || null; return p;
   });
   lengthAssignState.existing    = existRes.data || [];
   var existSet = new Set(lengthAssignState.existing.map(function(r) { return r.product_id; }));
@@ -1806,14 +1806,14 @@ async function prodShowCatalog() {
 
   var [prodRes, catRes] = await Promise.all([
     db.from('products').select('*').order('name'),
-    db.from('categories').select('id, name, systems(name)')
+    db.from('categories').select('id, name, catalog_section, systems(name)')
   ]);
   $('catalog-loading').classList.add('hidden');
   if (prodRes.error) { alert('Error loading catalog: ' + prodRes.error.message); return; }
   var catMap = {};
-  (catRes.data || []).forEach(function(c) { catMap[c.id] = c; });
+  (catRes.data || []).forEach(function(c) { if (c.catalog_section) catMap[c.catalog_section] = c; });
   allCatalogProducts = (prodRes.data || []).map(function(p) {
-    p.categories = catMap[p.category_id] || null;
+    p.categories = catMap[p.catalog_section] || null;
     return p;
   });
   renderCatalogList(allCatalogProducts);
@@ -1864,18 +1864,17 @@ function filterCatalog(q) {
 }
 
 async function openProductModalCatalog(prod) {
-  // Load all categories for the selector
-  var res = await db.from('categories').select('*, systems(name)').order('name');
+  var res = await db.from('categories').select('id, name, catalog_section, systems(name)').order('name');
   var cats = res.data || [];
   var sel = $('pm-category-select');
   sel.innerHTML = '<option value="">— Select a category —</option>' +
     cats.map(function(c) {
       var sn = c.systems ? c.systems.name + ' › ' : '';
-      var selected = prod && prod.category_id === c.id ? ' selected' : '';
-      return '<option value="' + c.id + '"' + selected + '>' + esc(sn + c.name) + '</option>';
+      var selected = prod && prod.catalog_section === c.catalog_section ? ' selected' : '';
+      return '<option value="' + esc(c.catalog_section || '') + '"' + selected + '>' + esc(sn + c.name) + '</option>';
     }).join('');
   $('pm-category-row').classList.remove('hidden');
-  prodState.selectedCategory = null; // signal catalog context
+  prodState.selectedCategory = null;
   openProductModal(prod || null);
 }
 
@@ -2479,9 +2478,9 @@ async function saveProduct() {
     finish:        $('pm-finish').value,
     display_order: parseInt($('pm-display-order').value) || 0,
     active:        $('pm-active').checked,
-    category_id:   prodState.selectedCategory ? prodState.selectedCategory.id : $('pm-category-select').value
+    catalog_section: prodState.selectedCategory ? prodState.selectedCategory.catalog_section : $('pm-category-select').value
   };
-  if (!data.category_id) { errEl.textContent = 'Category is required.'; errEl.classList.remove('hidden'); return; }
+  if (!data.catalog_section) { errEl.textContent = 'Category is required.'; errEl.classList.remove('hidden'); return; }
   if (imageUrl) data.image_url = imageUrl;
 
   var res = isNew
