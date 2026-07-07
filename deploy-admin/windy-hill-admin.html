@@ -660,6 +660,24 @@
           <div><label class="modal-label">Slug *</label>
             <input id="cm-slug" type="text" class="modal-input" placeholder="e.g. ag-ridge-cap"></div>
         </div>
+        <div><label class="modal-label">Catalog Section * <span class="font-normal text-gray-400">(which products appear in this step)</span></label>
+          <select id="cm-catalog-section" class="modal-input">
+            <option value="">— Select a catalog section —</option>
+            <option value="panel">Panels</option>
+            <option value="ridge_cap">Ridge Cap</option>
+            <option value="eave_trim">Eave Trim</option>
+            <option value="rake_trim">Rake Trim</option>
+            <option value="hip_cap">Hip Cap</option>
+            <option value="valley">Valley</option>
+            <option value="closure">Closure Strips</option>
+            <option value="clip">Clips</option>
+            <option value="z_bar">Z-Bar / Z-Flashing</option>
+            <option value="underlayment">Underlayment</option>
+            <option value="fastener">Fasteners</option>
+            <option value="sealant">Sealant</option>
+            <option value="misc">Miscellaneous / Custom</option>
+          </select>
+        </div>
         <div><label class="modal-label">Microcopy <span class="font-normal text-gray-400">(helper text in card)</span></label>
           <textarea id="cm-microcopy" rows="2" class="modal-input resize-none"></textarea></div>
         <div class="grid grid-cols-3 gap-4">
@@ -2284,6 +2302,7 @@ function openCategoryModal(cat, stageId) {
   $('cm-skip-label').value  = cat ? cat.skip_label || '' : '';
   $('cm-active').checked    = cat ? !!cat.active : true;
   $('cm-required').checked  = cat ? !!cat.required : false;
+  $('cm-catalog-section').value = cat ? cat.catalog_section || '' : '';
   $('cm-error').classList.add('hidden');
 
   // Populate stage select
@@ -2343,6 +2362,7 @@ async function saveCategory() {
     skip_label:    $('cm-skip-label').value.trim(),
     active:        $('cm-active').checked,
     required:      $('cm-required').checked,
+    catalog_section: $('cm-catalog-section').value || null,
     system_id:     prodState.selectedSystem.id,
     stage_id:      stageVal
   };
