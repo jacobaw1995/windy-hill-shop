@@ -1313,12 +1313,17 @@ async function openColorAssignModal(colorId) {
   $('color-assign-modal').classList.remove('hidden');
   document.body.style.overflow = 'hidden';
 
-  var [prodsRes, existRes] = await Promise.all([
-    db.from('products').select('id, name, sku, categories!category_id(name, systems(name))'),
+  var [prodsRes, catRes2, existRes] = await Promise.all([
+    db.from('products').select('id, name, sku, category_id').order('name'),
+    db.from('categories').select('id, name, systems(name)'),
     db.from('product_colors').select('product_id, price_modifier').eq('color_id', colorId)
   ]);
+  var catMap2 = {};
+  (catRes2.data || []).forEach(function(c) { catMap2[c.id] = c; });
 
-  colorAssignState.allProducts = prodsRes.data || [];
+  colorAssignState.allProducts = (prodsRes.data || []).map(function(p) {
+    p.categories = catMap2[p.category_id] || null; return p;
+  });
   colorAssignState.existing    = existRes.data || [];
 
   var existMap = {};
@@ -1460,12 +1465,17 @@ async function openLengthAssignModal(lengthId) {
   $('length-assign-modal').classList.remove('hidden');
   document.body.style.overflow = 'hidden';
 
-  var [prodsRes, existRes] = await Promise.all([
-    db.from('products').select('id, name, sku, categories!category_id(name, systems(name))'),
+  var [prodsRes, catRes3, existRes] = await Promise.all([
+    db.from('products').select('id, name, sku, category_id').order('name'),
+    db.from('categories').select('id, name, systems(name)'),
     db.from('product_lengths').select('product_id').eq('length_option_id', lengthId)
   ]);
+  var catMap3 = {};
+  (catRes3.data || []).forEach(function(c) { catMap3[c.id] = c; });
 
-  lengthAssignState.allProducts = prodsRes.data || [];
+  lengthAssignState.allProducts = (prodsRes.data || []).map(function(p) {
+    p.categories = catMap3[p.category_id] || null; return p;
+  });
   lengthAssignState.existing    = existRes.data || [];
   var existSet = new Set(lengthAssignState.existing.map(function(r) { return r.product_id; }));
 
@@ -1794,10 +1804,18 @@ async function prodShowCatalog() {
   $('catalog-loading').classList.remove('hidden');
   $('catalog-list').classList.add('hidden');
 
-  var res = await db.from('products').select('*, categories!category_id(name, systems(name))').order('name');
+  var [prodRes, catRes] = await Promise.all([
+    db.from('products').select('*').order('name'),
+    db.from('categories').select('id, name, systems(name)')
+  ]);
   $('catalog-loading').classList.add('hidden');
-  if (res.error) { alert('Error loading catalog: ' + res.error.message); return; }
-  allCatalogProducts = res.data || [];
+  if (prodRes.error) { alert('Error loading catalog: ' + prodRes.error.message); return; }
+  var catMap = {};
+  (catRes.data || []).forEach(function(c) { catMap[c.id] = c; });
+  allCatalogProducts = (prodRes.data || []).map(function(p) {
+    p.categories = catMap[p.category_id] || null;
+    return p;
+  });
   renderCatalogList(allCatalogProducts);
 }
 
