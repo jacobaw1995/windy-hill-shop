@@ -2113,7 +2113,7 @@ async function prodShowProducts(category) {
   $('prods-loading').classList.remove('hidden');
   $('prods-list').classList.add('hidden');
 
-  var res = await db.from('products').select('*').eq('category_id', category.id).order('display_order');
+  var res = await db.from('products').select('*').eq('catalog_section', category.catalog_section).order('display_order');
   $('prods-loading').classList.add('hidden');
   if (res.error) { alert('Error: ' + res.error.message); return; }
   prodState.products = res.data || [];
@@ -2247,14 +2247,9 @@ async function deleteSystem(id) {
   if (!id) return;
   var sys = (prodState.systems || []).find(function(s) { return s.id === id; });
   var name = sys ? sys.name : 'this system';
-  if (!confirm('Permanently delete "' + name + '"?\n\nThis will delete all its stages, categories, and products. This cannot be undone.')) return;
-  // Delete in order: products → categories → stages → system
-  var cats = await db.from('categories').select('id').eq('system_id', id);
-  if (cats.data && cats.data.length) {
-    var catIds = cats.data.map(function(c) { return c.id; });
-    await db.from('products').delete().in('category_id', catIds);
-    await db.from('categories').delete().eq('system_id', id);
-  }
+  if (!confirm('Permanently delete "' + name + '"?\n\nThis will delete all its stages and categories. Products in the flat catalog are not affected. This cannot be undone.')) return;
+  // Delete in order: categories → stages → system
+  await db.from('categories').delete().eq('system_id', id);
   await db.from('stages').delete().eq('system_id', id);
   var res = await db.from('systems').delete().eq('id', id);
   if (res.error) { alert('Delete failed: ' + res.error.message); return; }
@@ -2350,8 +2345,7 @@ async function saveCategory() {
 }
 
 async function deleteCategory(id) {
-  if (!confirm('Delete this category? This will also delete all its products.')) return;
-  await db.from('products').delete().eq('category_id', id);
+  if (!confirm('Delete this category? Products in the flat catalog are not affected.')) return;
   var res = await db.from('categories').delete().eq('id', id);
   if (res.error) { alert('Delete failed: ' + res.error.message); return; }
   prodShowSystem(prodState.selectedSystem);
@@ -2397,9 +2391,16 @@ async function openProductPicker() {
   $('product-picker-modal').classList.remove('hidden');
   document.body.style.overflow = 'hidden';
 
-  var res = await db.from('products').select('*, categories!category_id(name, systems(name))').order('name');
-  if (res.error) { $('picker-list').innerHTML = '<div class="py-8 text-center text-sm text-red-400">' + res.error.message + '</div>'; return; }
-  allPickerProducts = res.data || [];
+  var [prodRes, catRes] = await Promise.all([
+    db.from('products').select('*').order('name'),
+    db.from('categories').select('id, name, catalog_section, systems(name)')
+  ]);
+  if (prodRes.error) { $('picker-list').innerHTML = '<div class="py-8 text-center text-sm text-red-400">' + prodRes.error.message + '</div>'; return; }
+  var catMapP = {};
+  (catRes.data || []).forEach(function(c) { if (c.catalog_section) catMapP[c.catalog_section] = c; });
+  allPickerProducts = (prodRes.data || []).map(function(p) {
+    p.categories = catMapP[p.catalog_section] || null; return p;
+  });
   renderPickerList(allPickerProducts);
 }
 
