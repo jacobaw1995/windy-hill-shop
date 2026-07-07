@@ -900,9 +900,14 @@ function buildSSFinishToggle(catId) {
 }
 
 function getPanelLabel(cat, product) {
-  // For SS, multiple products share the same gauge (12" vs 16" panels) — use full name
   if (cat.slug && cat.slug.includes('ss')) {
     return product.name.replace(/^standing seam\s*/i, '');
+  }
+  // If multiple products share the same gauge, differentiate by name
+  var products = cat.products || [];
+  var sharedGauge = product.gauge && products.filter(function(p) { return p.gauge === product.gauge; }).length > 1;
+  if (sharedGauge) {
+    return product.name.replace(/^[^—\-]+[—\-]\s*/i, '');
   }
   return product.gauge || product.name;
 }
