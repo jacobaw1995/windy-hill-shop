@@ -103,13 +103,9 @@
         <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
         Dashboard
       </div>
-      <div class="nav-link" id="nav-catalog" onclick="switchTab('catalog')">
+      <div class="nav-link" id="nav-products" onclick="switchTab('products')">
         <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-        Catalog
-      </div>
-      <div class="nav-link" id="nav-systems" onclick="switchTab('systems')">
-        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
-        Systems
+        Products
       </div>
       <div class="nav-link" id="nav-colors" onclick="switchTab('colors')">
         <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
@@ -227,70 +223,22 @@
       </div><!-- /tab-dashboard -->
 
       <!-- ── PRODUCTS TAB ──────────────────────────────────── -->
-      <!-- ── CATALOG TAB ─────────────────────────────────────── -->
-      <div id="tab-catalog" class="tab-panel">
-        <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-          <!-- Toolbar -->
-          <div class="px-5 py-4 border-b border-gray-100 flex flex-wrap items-center gap-3">
-            <h2 class="font-bold text-gray-800 mr-2">All Products</h2>
-            <input id="cat-search" type="search" placeholder="Search name or SKU…"
-              class="border border-gray-200 rounded-lg px-3 py-1.5 text-sm w-44 focus:outline-none focus:ring-2 focus:ring-amber-400"
-              oninput="filterCatalog()">
-            <select id="cat-filter-section" onchange="filterCatalog()"
-              class="border border-gray-200 rounded-lg px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-amber-400">
-              <option value="">All sections</option>
-              <option value="panel">panel</option>
-              <option value="ridge_cap">ridge_cap</option>
-              <option value="eave_trim">eave_trim</option>
-              <option value="rake_trim">rake_trim</option>
-              <option value="hip_cap">hip_cap</option>
-              <option value="valley">valley</option>
-              <option value="closure">closure</option>
-              <option value="clip">clip</option>
-              <option value="z_bar">z_bar</option>
-              <option value="underlayment">underlayment</option>
-              <option value="fastener">fastener</option>
-              <option value="sealant">sealant</option>
-              <option value="misc">misc</option>
-            </select>
-            <select id="cat-filter-sys" onchange="filterCatalog()"
-              class="border border-gray-200 rounded-lg px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-amber-400">
-              <option value="">All systems</option>
-              <option value="ag-panel">Exposed Fastener (AG)</option>
-              <option value="standing-seam">Standing Seam</option>
-            </select>
-            <div class="flex-1"></div>
-            <button onclick="openProductModal(null)" class="btn-rust text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors">+ Add Product</button>
-          </div>
-          <!-- Loading / Table -->
-          <div id="catalog-loading" class="py-12 flex justify-center"><div class="spinner"></div></div>
-          <div id="catalog-empty"   class="hidden py-10 text-center text-sm text-gray-400">No products found.</div>
-          <div id="catalog-table"   class="hidden overflow-x-auto">
-            <table class="w-full text-sm">
-              <thead>
-                <tr class="border-b border-gray-100 text-xs font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">
-                  <th class="text-left px-5 py-3">Name</th>
-                  <th class="text-left px-3 py-3">SKU</th>
-                  <th class="text-left px-3 py-3">Section</th>
-                  <th class="text-left px-3 py-3">Type</th>
-                  <th class="text-left px-3 py-3">Systems</th>
-                  <th class="text-left px-3 py-3">Unit</th>
-                  <th class="text-right px-3 py-3">Price</th>
-                  <th class="text-center px-3 py-3">Active</th>
-                  <th class="px-3 py-3"></th>
-                </tr>
-              </thead>
-              <tbody id="catalog-tbody"></tbody>
-            </table>
-          </div>
+      <div id="tab-products" class="tab-panel">
+
+        <!-- Top-level tab switcher: Catalog vs Systems -->
+        <div id="prod-top-tabs" class="flex gap-1 mb-5 bg-gray-100 rounded-xl p-1">
+          <button id="prod-tab-catalog" onclick="prodShowCatalog()"
+            class="flex-1 py-2 rounded-lg text-sm font-semibold transition-colors">
+            Catalog
+          </button>
+          <button id="prod-tab-systems" onclick="prodShowSystems()"
+            class="flex-1 py-2 rounded-lg text-sm font-semibold transition-colors">
+            Systems
+          </button>
         </div>
-      </div><!-- /tab-catalog -->
 
-      <!-- ── SYSTEMS (Wizard Config) TAB ────────────────────── -->
-      <div id="tab-systems" class="tab-panel">
-
-        <!-- Breadcrumb -->
-        <div id="prod-breadcrumb" class="flex items-center gap-2 text-sm mb-4 text-gray-500">
+        <!-- Breadcrumb (shown when drilling into a system) -->
+        <div id="prod-breadcrumb" class="hidden items-center gap-2 text-sm mb-4 text-gray-500">
           <button onclick="prodShowSystems()" class="hover:text-gray-800 font-medium transition-colors">Systems</button>
           <span id="bc-cat-wrap" class="hidden items-center gap-2">
             <span class="text-gray-300">›</span>
@@ -302,11 +250,25 @@
           </span>
         </div>
 
+        <!-- View: Catalog (default) -->
+        <div id="prod-view-catalog">
+          <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-3">
+              <input id="catalog-search" type="text" placeholder="Search by name, SKU, or category…"
+                oninput="filterCatalog(this.value)"
+                class="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
+              <button onclick="openProductModalCatalog(null)" class="btn-rust text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap">+ New Product</button>
+            </div>
+            <div id="catalog-loading" class="py-12 flex justify-center"><div class="spinner"></div></div>
+            <div id="catalog-list" class="hidden divide-y divide-gray-50"></div>
+          </div>
+        </div>
+
         <!-- View: Systems -->
-        <div id="prod-view-systems">
+        <div id="prod-view-systems" class="hidden">
           <div class="bg-white rounded-xl shadow-sm overflow-hidden">
             <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-              <h2 class="font-bold text-gray-800">Systems</h2>
+              <h2 class="font-bold text-gray-800">Roof Systems</h2>
               <button onclick="openSystemModal(null)" class="btn-rust text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors">+ Add System</button>
             </div>
             <div id="systems-loading" class="py-12 flex justify-center"><div class="spinner"></div></div>
@@ -314,7 +276,7 @@
           </div>
         </div>
 
-        <!-- View: Categories -->
+        <!-- View: Categories (kanban — drilled in from Systems) -->
         <div id="prod-view-categories" class="hidden">
           <div class="mb-4 flex items-center justify-between">
             <h2 id="cats-title" class="font-bold text-gray-800 text-lg"></h2>
@@ -324,12 +286,13 @@
           <div id="kanban-board" class="hidden flex gap-4 overflow-x-auto pb-6" style="min-height:520px"></div>
         </div>
 
-        <!-- View: Products -->
+        <!-- View: Products within a category -->
         <div id="prod-view-products" class="hidden">
           <div class="bg-white rounded-xl shadow-sm overflow-hidden">
             <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between gap-3">
               <h2 id="prods-title" class="font-bold text-gray-800">Products</h2>
               <div class="flex gap-2">
+                <button onclick="openProductPicker()" class="text-xs font-semibold px-3 py-1.5 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors">Copy from Catalog</button>
                 <button onclick="openProductModal(null)" class="btn-rust text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors">+ New Product</button>
               </div>
             </div>
@@ -338,7 +301,7 @@
           </div>
         </div>
 
-      </div><!-- /tab-systems -->
+      </div><!-- /tab-products -->
 
       <!-- ── COLORS TAB ─────────────────────────────────────── -->
       <div id="tab-colors" class="tab-panel">
@@ -714,23 +677,6 @@
           <div><label class="modal-label">Display Order</label>
             <input id="cm-display-order" type="number" class="modal-input"></div>
         </div>
-        <div><label class="modal-label">Catalog Section <span class="font-normal text-gray-400">(links wizard step to product catalog)</span></label>
-          <select id="cm-catalog-section" class="modal-input">
-            <option value="">— None —</option>
-            <option value="panel">panel</option>
-            <option value="ridge_cap">ridge_cap</option>
-            <option value="eave_trim">eave_trim</option>
-            <option value="rake_trim">rake_trim</option>
-            <option value="hip_cap">hip_cap</option>
-            <option value="valley">valley</option>
-            <option value="closure">closure</option>
-            <option value="clip">clip</option>
-            <option value="z_bar">z_bar</option>
-            <option value="underlayment">underlayment</option>
-            <option value="fastener">fastener</option>
-            <option value="sealant">sealant</option>
-            <option value="misc">misc</option>
-          </select></div>
         <div><label class="modal-label">Skip Label <span class="font-normal text-gray-400">(checkbox text)</span></label>
           <input id="cm-skip-label" type="text" placeholder="e.g. I do not need hip caps" class="modal-input"></div>
         <div><label class="modal-label">Category Image</label>
@@ -763,6 +709,13 @@
       </div>
       <div class="flex-1 overflow-y-auto px-6 py-5 space-y-4">
         <input type="hidden" id="pm-id">
+        <!-- Category selector — shown when adding/editing from Catalog context -->
+        <div id="pm-category-row" class="hidden">
+          <label class="modal-label">Category *</label>
+          <select id="pm-category-select" class="modal-input">
+            <option value="">— Select a category —</option>
+          </select>
+        </div>
         <div class="grid grid-cols-2 gap-4">
           <div><label class="modal-label">Name *</label>
             <input id="pm-name" type="text" class="modal-input"></div>
@@ -797,44 +750,6 @@
               <option value="textured">Textured only</option>
               <option value="smooth">Smooth only</option>
             </select></div>
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-          <div><label class="modal-label">Product Type</label>
-            <select id="pm-product-type" class="modal-input">
-              <option value="panel">panel</option>
-              <option value="trim">trim</option>
-              <option value="accessory">accessory</option>
-              <option value="fastener">fastener</option>
-              <option value="sealant">sealant</option>
-              <option value="underlayment">underlayment</option>
-            </select></div>
-          <div><label class="modal-label">Catalog Section</label>
-            <select id="pm-catalog-section" class="modal-input">
-              <option value="panel">panel</option>
-              <option value="ridge_cap">ridge_cap</option>
-              <option value="eave_trim">eave_trim</option>
-              <option value="rake_trim">rake_trim</option>
-              <option value="hip_cap">hip_cap</option>
-              <option value="valley">valley</option>
-              <option value="closure">closure</option>
-              <option value="clip">clip</option>
-              <option value="z_bar">z_bar</option>
-              <option value="underlayment">underlayment</option>
-              <option value="fastener">fastener</option>
-              <option value="sealant">sealant</option>
-              <option value="misc">misc</option>
-            </select></div>
-        </div>
-        <div>
-          <label class="modal-label">Compatible Systems <span class="font-normal text-gray-400">(which systems show this product)</span></label>
-          <div class="flex gap-4 mt-1">
-            <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-              <input type="checkbox" id="pm-sys-ag-panel" value="ag-panel" class="pm-sys-cb w-4 h-4 accent-amber-600"> Exposed Fastener (AG)
-            </label>
-            <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-              <input type="checkbox" id="pm-sys-standing-seam" value="standing-seam" class="pm-sys-cb w-4 h-4 accent-amber-600"> Standing Seam
-            </label>
-          </div>
         </div>
         <div><label class="modal-label">Product Image</label>
           <div id="pm-img-preview" class="mb-2 hidden"><img id="pm-img-thumb" class="h-24 w-full object-cover rounded-lg border"></div>
@@ -985,7 +900,7 @@ async function forgotPassword() {
 
 // ── Tab Switching ──────────────────────────────────────────────
 var TAB_TITLES = {
-  dashboard: 'Dashboard', catalog: 'Catalog', systems: 'Systems', colors: 'Colors',
+  dashboard: 'Dashboard', products: 'Products', colors: 'Colors',
   options: 'Options', photos: 'Photos', drivers: 'Drivers', settings: 'Settings'
 };
 
@@ -996,8 +911,7 @@ function switchTab(tab) {
   $('nav-' + tab).classList.add('active');
   $('page-title').textContent = TAB_TITLES[tab] || tab;
   closeOrderDetail();
-  if (tab === 'catalog')  onCatalogTabOpen();
-  if (tab === 'systems')  onSystemsTabOpen();
+  if (tab === 'products') onProductsTabOpen();
   if (tab === 'colors')   onColorsTabOpen();
   if (tab === 'options')  onOptionsTabOpen();
   if (tab === 'photos')   onPhotosTabOpen();
@@ -1400,7 +1314,7 @@ async function openColorAssignModal(colorId) {
   document.body.style.overflow = 'hidden';
 
   var [prodsRes, existRes] = await Promise.all([
-    db.from('products').select('id, name, sku, catalog_section, compatible_systems').order('catalog_section').order('name'),
+    db.from('products').select('id, name, sku, categories(name, systems(name))'),
     db.from('product_colors').select('product_id, price_modifier').eq('color_id', colorId)
   ]);
 
@@ -1413,12 +1327,13 @@ async function openColorAssignModal(colorId) {
   $('ca-list').innerHTML = colorAssignState.allProducts.map(function(p) {
     var checked = existMap.hasOwnProperty(p.id) ? 'checked' : '';
     var mod = existMap[p.id] || 0;
-    var sysLabel = (p.compatible_systems || []).map(function(s){ return s === 'ag-panel' ? 'AG' : 'SS'; }).join('+');
+    var sys = p.categories && p.categories.systems ? p.categories.systems.name : '';
+    var cat = p.categories ? p.categories.name : '';
     return '<label class="flex items-center gap-3 py-2 cursor-pointer hover:bg-gray-50 rounded px-2 -mx-2">' +
       '<input type="checkbox" data-pid="' + p.id + '" class="color-assign-cb w-4 h-4 accent-amber-600" ' + checked + '>' +
       '<div class="flex-1 min-w-0">' +
         '<span class="text-sm font-medium text-gray-800">' + esc(p.name) + '</span>' +
-        '<span class="text-xs text-gray-400 ml-2">' + esc(p.catalog_section || '') + (sysLabel ? ' · ' + sysLabel : '') + '</span>' +
+        '<span class="text-xs text-gray-400 ml-2">' + esc(sys) + ' › ' + esc(cat) + '</span>' +
       '</div>' +
       '<div class="flex items-center gap-1 flex-shrink-0">' +
         '<span class="text-xs text-gray-400">+$</span>' +
@@ -1546,7 +1461,7 @@ async function openLengthAssignModal(lengthId) {
   document.body.style.overflow = 'hidden';
 
   var [prodsRes, existRes] = await Promise.all([
-    db.from('products').select('id, name, sku, catalog_section, compatible_systems').order('catalog_section').order('name'),
+    db.from('products').select('id, name, sku, categories(name, systems(name))'),
     db.from('product_lengths').select('product_id').eq('length_option_id', lengthId)
   ]);
 
@@ -1556,12 +1471,13 @@ async function openLengthAssignModal(lengthId) {
 
   $('la-list').innerHTML = lengthAssignState.allProducts.map(function(p) {
     var checked = existSet.has(p.id) ? 'checked' : '';
-    var sysLabel = (p.compatible_systems || []).map(function(s){ return s === 'ag-panel' ? 'AG' : 'SS'; }).join('+');
+    var sys = p.categories && p.categories.systems ? p.categories.systems.name : '';
+    var cat = p.categories ? p.categories.name : '';
     return '<label class="flex items-center gap-3 py-2 cursor-pointer hover:bg-gray-50 rounded px-2 -mx-2">' +
       '<input type="checkbox" data-pid="' + p.id + '" class="length-assign-cb w-4 h-4 accent-amber-600" ' + checked + '>' +
       '<div class="min-w-0">' +
         '<span class="text-sm font-medium text-gray-800">' + esc(p.name) + '</span>' +
-        '<span class="text-xs text-gray-400 ml-2">' + esc(p.catalog_section || '') + (sysLabel ? ' · ' + sysLabel : '') + '</span>' +
+        '<span class="text-xs text-gray-400 ml-2">' + esc(sys) + ' › ' + esc(cat) + '</span>' +
       '</div>' +
     '</label>';
   }).join('') || '<p class="text-sm text-gray-400 text-center py-4">No products found.</p>';
@@ -1822,99 +1738,7 @@ function onDriversTabOpen() { if (!driversList.length)  loadDrivers(); }
 function onSettingsTabOpen() { loadSettings(); }
 
 // ═══════════════════════════════════════════════════════════════
-// CATALOG — Flat product list
-// ═══════════════════════════════════════════════════════════════
-
-var catalogAllProducts = [];
-
-function onCatalogTabOpen() { loadCatalogProducts(); }
-
-async function loadCatalogProducts() {
-  $('catalog-loading').classList.remove('hidden');
-  $('catalog-table').classList.add('hidden');
-  $('catalog-empty').classList.add('hidden');
-
-  var res = await db.from('products')
-    .select('*')
-    .order('catalog_section')
-    .order('display_order');
-
-  $('catalog-loading').classList.add('hidden');
-  if (res.error) { alert('Error loading catalog: ' + res.error.message); return; }
-  catalogAllProducts = res.data || [];
-  filterCatalog();
-}
-
-function filterCatalog() {
-  var q       = ($('cat-search').value || '').toLowerCase();
-  var section = $('cat-filter-section').value;
-  var sys     = $('cat-filter-sys').value;
-
-  var filtered = catalogAllProducts.filter(function(p) {
-    if (q && !(p.name || '').toLowerCase().includes(q) && !(p.sku || '').toLowerCase().includes(q)) return false;
-    if (section && p.catalog_section !== section) return false;
-    if (sys && (!Array.isArray(p.compatible_systems) || p.compatible_systems.indexOf(sys) === -1)) return false;
-    return true;
-  });
-
-  renderCatalogTable(filtered);
-}
-
-function renderCatalogTable(products) {
-  if (!products.length) {
-    $('catalog-table').classList.add('hidden');
-    $('catalog-empty').classList.remove('hidden');
-    return;
-  }
-  $('catalog-empty').classList.add('hidden');
-
-  $('catalog-tbody').innerHTML = products.map(function(p) {
-    var priceCell = p.base_price != null
-      ? '<span class="font-semibold">$' + Number(p.base_price).toFixed(2) + '</span>'
-      : '<span class="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">Unpriced</span>';
-    var sysLabel = (p.compatible_systems || []).map(function(s) {
-      return s === 'ag-panel' ? '<span class="inline-block text-xs bg-blue-50 text-blue-700 rounded px-1.5 py-0.5 mr-0.5">AG</span>'
-                              : '<span class="inline-block text-xs bg-emerald-50 text-emerald-700 rounded px-1.5 py-0.5 mr-0.5">SS</span>';
-    }).join('');
-    var pj = JSON.stringify(p).replace(/"/g, '&quot;');
-    return '<tr class="border-b border-gray-50 hover:bg-gray-50 transition-colors">' +
-      '<td class="px-5 py-3 font-medium text-gray-800">' + esc(p.name) + '</td>' +
-      '<td class="px-3 py-3 font-mono text-xs text-gray-400">' + esc(p.sku || '—') + '</td>' +
-      '<td class="px-3 py-3 text-xs text-gray-500">' + esc(p.catalog_section || '—') + '</td>' +
-      '<td class="px-3 py-3 text-xs text-gray-500">' + esc(p.product_type || '—') + '</td>' +
-      '<td class="px-3 py-3">' + (sysLabel || '<span class="text-xs text-gray-300">none</span>') + '</td>' +
-      '<td class="px-3 py-3 text-xs text-gray-500">' + esc((p.unit_type || '').replace('_', ' ')) + '</td>' +
-      '<td class="px-3 py-3 text-right">' + priceCell + '</td>' +
-      '<td class="px-3 py-3 text-center">' + activeBadge(p.active) + '</td>' +
-      '<td class="px-3 py-3 text-right whitespace-nowrap">' +
-        '<button onclick="openCatalogProductModal(' + pj + ')" class="text-xs text-gray-500 hover:text-gray-800 border border-gray-200 rounded px-2 py-1 hover:bg-gray-50 transition-colors mr-1">Edit</button>' +
-        '<button onclick="deleteCatalogProduct(\'' + p.id + '\')" class="text-xs text-red-400 hover:text-red-600 border border-red-100 rounded px-2 py-1 hover:bg-red-50 transition-colors">Del</button>' +
-      '</td>' +
-    '</tr>';
-  }).join('');
-
-  $('catalog-table').classList.remove('hidden');
-}
-
-function openCatalogProductModal(prod) {
-  // Clear the prodState context so modal defaults work without a selected category/system
-  prodState.selectedCategory = null;
-  prodState.selectedSystem   = null;
-  prodState.products         = catalogAllProducts;
-  openProductModal(prod || null);
-}
-
-async function deleteCatalogProduct(id) {
-  if (!confirm('Delete this product from the catalog? This cannot be undone.')) return;
-  await db.from('product_colors').delete().eq('product_id', id);
-  await db.from('product_lengths').delete().eq('product_id', id);
-  var res = await db.from('products').delete().eq('id', id);
-  if (res.error) { alert('Delete failed: ' + res.error.message); return; }
-  loadCatalogProducts();
-}
-
-// ═══════════════════════════════════════════════════════════════
-// SYSTEMS — Wizard configuration
+// SESSION 6 — PRODUCTS MANAGEMENT
 // ═══════════════════════════════════════════════════════════════
 
 var prodState = {
@@ -1929,14 +1753,130 @@ var prodState = {
 
 // ── Products Tab Entry ─────────────────────────────────────────
 
-function onSystemsTabOpen() {
-  if (prodState.systems.length === 0) prodShowSystems();
+function setProdTopTab(name) {
+  ['catalog','systems'].forEach(function(t) {
+    var btn = $('prod-tab-' + t);
+    if (!btn) return;
+    if (t === name) {
+      btn.className = 'flex-1 py-2 rounded-lg text-sm font-semibold transition-colors bg-white shadow-sm text-gray-900';
+    } else {
+      btn.className = 'flex-1 py-2 rounded-lg text-sm font-semibold transition-colors text-gray-500 hover:text-gray-700';
+    }
+  });
+}
+
+function hideAllProdViews() {
+  ['prod-view-catalog','prod-view-systems','prod-view-categories','prod-view-products'].forEach(function(id) {
+    $('prod-view-catalog' === id ? id : id) && $( id ).classList.add('hidden');
+  });
+}
+
+function onProductsTabOpen() {
+  prodShowCatalog();
+}
+
+// ── Catalog View ───────────────────────────────────────────────
+
+var allCatalogProducts = [];
+
+async function prodShowCatalog() {
+  prodState.view = 'catalog';
+  prodState.selectedCategory = null;
+  setProdTopTab('catalog');
+  $('prod-top-tabs').classList.remove('hidden');
+  $('prod-breadcrumb').classList.remove('flex');
+  $('prod-breadcrumb').classList.add('hidden');
+  $('prod-view-catalog').classList.remove('hidden');
+  $('prod-view-systems').classList.add('hidden');
+  $('prod-view-categories').classList.add('hidden');
+  $('prod-view-products').classList.add('hidden');
+  $('catalog-search').value = '';
+  $('catalog-loading').classList.remove('hidden');
+  $('catalog-list').classList.add('hidden');
+
+  var res = await db.from('products').select('*, categories(name, systems(name))').order('name');
+  $('catalog-loading').classList.add('hidden');
+  if (res.error) { alert('Error loading catalog: ' + res.error.message); return; }
+  allCatalogProducts = res.data || [];
+  renderCatalogList(allCatalogProducts);
+}
+
+function renderCatalogList(products) {
+  var el = $('catalog-list');
+  if (!products.length) {
+    el.innerHTML = '<div class="py-12 text-center text-sm text-gray-400">No products yet — add your first product above.</div>';
+    el.classList.remove('hidden');
+    return;
+  }
+  el.innerHTML = products.map(function(p) {
+    var catName = p.categories ? p.categories.name : '';
+    var sysName = p.categories && p.categories.systems ? p.categories.systems.name : '';
+    var context = sysName ? esc(sysName) + (catName ? ' › ' + esc(catName) : '') : (catName ? esc(catName) : '<span class="text-amber-600">Unassigned</span>');
+    var pj = JSON.stringify(p).replace(/"/g,'&quot;');
+    return '<div class="flex items-center gap-4 px-5 py-3 hover:bg-gray-50 transition-colors">' +
+      '<div class="w-12 h-12 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">' +
+        (p.image_url ? '<img src="' + esc(p.image_url) + '" class="w-full h-full object-cover">' : '') +
+      '</div>' +
+      '<div class="flex-1 min-w-0">' +
+        '<div class="font-semibold text-gray-800 text-sm">' + esc(p.name) + '</div>' +
+        '<div class="text-xs text-gray-400 mt-0.5">' + (p.sku ? esc(p.sku) + ' · ' : '') + context + '</div>' +
+      '</div>' +
+      '<div class="text-sm font-semibold flex-shrink-0 mr-3 ' + (p.base_price != null ? 'text-gray-700' : 'text-amber-600') + '">' +
+        (p.base_price != null ? '$' + Number(p.base_price).toFixed(2) : 'Unpriced') +
+      '</div>' +
+      activeBadge(p.active) +
+      '<div class="flex gap-2 flex-shrink-0 ml-2">' +
+        '<button onclick="openProductModalCatalog(' + pj + ')" class="text-xs text-gray-500 hover:text-gray-800 border border-gray-200 rounded px-2 py-1 hover:bg-gray-50 transition-colors">Edit</button>' +
+        '<button onclick="deleteCatalogProduct(\'' + p.id + '\')" class="text-xs text-red-400 hover:text-red-600 border border-red-100 rounded px-2 py-1 hover:bg-red-50 transition-colors">Delete</button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+  el.classList.remove('hidden');
+}
+
+function filterCatalog(q) {
+  var lq = q.trim().toLowerCase();
+  var filtered = lq ? allCatalogProducts.filter(function(p) {
+    return (p.name || '').toLowerCase().includes(lq) ||
+           (p.sku  || '').toLowerCase().includes(lq) ||
+           (p.categories && (p.categories.name || '').toLowerCase().includes(lq)) ||
+           (p.categories && p.categories.systems && (p.categories.systems.name || '').toLowerCase().includes(lq));
+  }) : allCatalogProducts;
+  renderCatalogList(filtered);
+}
+
+async function openProductModalCatalog(prod) {
+  // Load all categories for the selector
+  var res = await db.from('categories').select('*, systems(name)').order('name');
+  var cats = res.data || [];
+  var sel = $('pm-category-select');
+  sel.innerHTML = '<option value="">— Select a category —</option>' +
+    cats.map(function(c) {
+      var sn = c.systems ? c.systems.name + ' › ' : '';
+      var selected = prod && prod.category_id === c.id ? ' selected' : '';
+      return '<option value="' + c.id + '"' + selected + '>' + esc(sn + c.name) + '</option>';
+    }).join('');
+  $('pm-category-row').classList.remove('hidden');
+  prodState.selectedCategory = null; // signal catalog context
+  openProductModal(prod || null);
+}
+
+async function deleteCatalogProduct(id) {
+  if (!confirm('Delete this product? This cannot be undone.')) return;
+  var res = await db.from('products').delete().eq('id', id);
+  if (res.error) { alert('Delete failed: ' + res.error.message); return; }
+  prodShowCatalog();
 }
 
 async function prodShowSystems() {
   prodState.view = 'systems';
   prodState.selectedSystem = null;
   prodState.selectedCategory = null;
+  setProdTopTab('systems');
+  $('prod-top-tabs').classList.remove('hidden');
+  $('prod-breadcrumb').classList.add('hidden');
+  $('prod-breadcrumb').classList.remove('flex');
+  $('prod-view-catalog').classList.add('hidden');
   $('prod-view-systems').classList.remove('hidden');
   $('prod-view-categories').classList.add('hidden');
   $('prod-view-products').classList.add('hidden');
@@ -1981,6 +1921,10 @@ async function prodShowSystem(system) {
   prodState.selectedSystem = system;
   prodState.selectedCategory = null;
   prodState.view = 'categories';
+  $('prod-top-tabs').classList.add('hidden');
+  $('prod-breadcrumb').classList.remove('hidden');
+  $('prod-breadcrumb').style.display = 'flex';
+  $('prod-view-catalog').classList.add('hidden');
   $('prod-view-systems').classList.add('hidden');
   $('prod-view-categories').classList.remove('hidden');
   $('prod-view-products').classList.add('hidden');
@@ -2152,9 +2096,7 @@ async function prodShowProducts(category) {
   $('prods-loading').classList.remove('hidden');
   $('prods-list').classList.add('hidden');
 
-  var res = category.catalog_section
-    ? await db.from('products').select('*').eq('catalog_section', category.catalog_section).order('display_order')
-    : await db.from('products').select('*').order('display_order');
+  var res = await db.from('products').select('*').eq('category_id', category.id).order('display_order');
   $('prods-loading').classList.add('hidden');
   if (res.error) { alert('Error: ' + res.error.message); return; }
   prodState.products = res.data || [];
@@ -2174,7 +2116,7 @@ function renderProductsList() {
       '<th class="text-left px-3 py-3">SKU</th>' +
       '<th class="text-left px-3 py-3">Gauge</th>' +
       '<th class="text-left px-3 py-3">Unit</th>' +
-      '<th class="text-left px-3 py-3">Systems</th>' +
+      '<th class="text-left px-3 py-3">Finish</th>' +
       '<th class="text-right px-3 py-3">Price</th>' +
       '<th class="text-center px-3 py-3">Active</th>' +
       '<th class="px-3 py-3"></th>' +
@@ -2195,7 +2137,7 @@ function renderProductsList() {
         '<td class="px-3 py-3 font-mono text-xs text-gray-500">' + esc(p.sku||'—') + '</td>' +
         '<td class="px-3 py-3 text-gray-500">' + esc(p.gauge||'—') + '</td>' +
         '<td class="px-3 py-3 text-gray-500 text-xs">' + esc((p.unit_type||'').replace('_',' ')) + '</td>' +
-        '<td class="px-3 py-3 text-gray-500 text-xs">' + (p.compatible_systems || []).map(function(s){ return s === 'ag-panel' ? 'AG' : 'SS'; }).join(', ') + '</td>' +
+        '<td class="px-3 py-3 text-gray-500 text-xs">' + finishLabel + '</td>' +
         '<td class="px-3 py-3 text-right">' + priceCell + '</td>' +
         '<td class="px-3 py-3 text-center">' + activeBadge(p.active) + '</td>' +
         '<td class="px-3 py-3 text-right whitespace-nowrap">' +
@@ -2289,9 +2231,13 @@ async function deleteSystem(id) {
   var sys = (prodState.systems || []).find(function(s) { return s.id === id; });
   var name = sys ? sys.name : 'this system';
   if (!confirm('Permanently delete "' + name + '"?\n\nThis will delete all its stages, categories, and products. This cannot be undone.')) return;
-  // Delete in order: categories → stages → system
-  // Note: products are catalog items (not owned by systems) — do NOT cascade delete them
-  await db.from('categories').delete().eq('system_id', id);
+  // Delete in order: products → categories → stages → system
+  var cats = await db.from('categories').select('id').eq('system_id', id);
+  if (cats.data && cats.data.length) {
+    var catIds = cats.data.map(function(c) { return c.id; });
+    await db.from('products').delete().in('category_id', catIds);
+    await db.from('categories').delete().eq('system_id', id);
+  }
   await db.from('stages').delete().eq('system_id', id);
   var res = await db.from('systems').delete().eq('id', id);
   if (res.error) { alert('Delete failed: ' + res.error.message); return; }
@@ -2309,7 +2255,6 @@ function openCategoryModal(cat, stageId) {
   $('cm-slug').value        = cat ? cat.slug || '' : '';
   $('cm-microcopy').value   = cat ? cat.microcopy || '' : '';
   $('cm-badge').value       = cat ? cat.badge || 'OPTIONAL' : 'OPTIONAL';
-  $('cm-catalog-section').value = cat ? cat.catalog_section || '' : '';
   $('cm-display-order').value = cat ? cat.display_order || 0 : (prodState.categories.length + 1);
   $('cm-skip-label').value  = cat ? cat.skip_label || '' : '';
   $('cm-active').checked    = cat ? !!cat.active : true;
@@ -2365,17 +2310,16 @@ async function saveCategory() {
 
   var stageVal = $('cm-stage-select').value || null;
   var data = {
-    name:             name,
-    slug:             slug,
-    microcopy:        $('cm-microcopy').value.trim(),
-    badge:            $('cm-badge').value,
-    catalog_section:  $('cm-catalog-section').value || null,
-    display_order:    parseInt($('cm-display-order').value) || 0,
-    skip_label:       $('cm-skip-label').value.trim(),
-    active:           $('cm-active').checked,
-    required:         $('cm-required').checked,
-    system_id:        prodState.selectedSystem.id,
-    stage_id:         stageVal
+    name:          name,
+    slug:          slug,
+    microcopy:     $('cm-microcopy').value.trim(),
+    badge:         $('cm-badge').value,
+    display_order: parseInt($('cm-display-order').value) || 0,
+    skip_label:    $('cm-skip-label').value.trim(),
+    active:        $('cm-active').checked,
+    required:      $('cm-required').checked,
+    system_id:     prodState.selectedSystem.id,
+    stage_id:      stageVal
   };
   if (imageUrl) data.image_url = imageUrl;
 
@@ -2389,8 +2333,8 @@ async function saveCategory() {
 }
 
 async function deleteCategory(id) {
-  if (!confirm('Delete this wizard step (category)? Products in the catalog are not affected.')) return;
-  // Note: products are catalog items — do NOT cascade delete them
+  if (!confirm('Delete this category? This will also delete all its products.')) return;
+  await db.from('products').delete().eq('category_id', id);
   var res = await db.from('categories').delete().eq('id', id);
   if (res.error) { alert('Delete failed: ' + res.error.message); return; }
   prodShowSystem(prodState.selectedSystem);
@@ -2409,12 +2353,6 @@ function openProductModal(prod) {
   $('pm-unit-type').value        = prod ? prod.unit_type || 'each' : 'each';
   $('pm-base-price').value       = prod && prod.base_price != null ? prod.base_price : '';
   $('pm-finish').value           = prod ? prod.finish || 'both' : 'both';
-  $('pm-product-type').value     = prod ? prod.product_type || 'trim' : 'trim';
-  $('pm-catalog-section').value  = prod ? prod.catalog_section || (prodState.selectedCategory && prodState.selectedCategory.catalog_section) || '' : (prodState.selectedCategory && prodState.selectedCategory.catalog_section) || '';
-  // Populate compatible_systems checkboxes
-  var sysCbs = document.querySelectorAll('.pm-sys-cb');
-  var compatSystems = prod ? (prod.compatible_systems || []) : (prodState.selectedSystem ? [prodState.selectedSystem.slug] : []);
-  sysCbs.forEach(function(cb) { cb.checked = compatSystems.indexOf(cb.value) !== -1; });
   $('pm-display-order').value    = prod ? prod.display_order || 0 : (prodState.products.length + 1);
   $('pm-active').checked         = prod ? !!prod.active : true;
   $('pm-error').classList.add('hidden');
@@ -2442,7 +2380,7 @@ async function openProductPicker() {
   $('product-picker-modal').classList.remove('hidden');
   document.body.style.overflow = 'hidden';
 
-  var res = await db.from('products').select('id, name, sku, catalog_section, compatible_systems, base_price, image_url').order('catalog_section').order('name');
+  var res = await db.from('products').select('*, categories(name, systems(name))').order('name');
   if (res.error) { $('picker-list').innerHTML = '<div class="py-8 text-center text-sm text-red-400">' + res.error.message + '</div>'; return; }
   allPickerProducts = res.data || [];
   renderPickerList(allPickerProducts);
@@ -2452,13 +2390,14 @@ function renderPickerList(products) {
   var el = $('picker-list');
   if (!products.length) { el.innerHTML = '<div class="py-8 text-center text-sm text-gray-400">No products found.</div>'; return; }
   el.innerHTML = products.map(function(p) {
-    var sysLabel = (p.compatible_systems || []).map(function(s){ return s === 'ag-panel' ? 'AG' : 'SS'; }).join('+');
+    var catName = p.categories ? p.categories.name : '';
+    var sysName = p.categories && p.categories.systems ? p.categories.systems.name : '';
     var pj = JSON.stringify(p).replace(/"/g, '&quot;');
     return '<div class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors" onclick="copyProductToCategory(' + pj + ')">' +
       (p.image_url ? '<img src="' + esc(p.image_url) + '" class="w-10 h-10 rounded-lg object-cover flex-shrink-0">' : '<div class="w-10 h-10 rounded-lg bg-gray-100 flex-shrink-0"></div>') +
       '<div class="flex-1 min-w-0">' +
         '<div class="font-medium text-sm text-gray-800">' + esc(p.name) + '</div>' +
-        '<div class="text-xs text-gray-400">' + esc(p.catalog_section || '') + (sysLabel ? ' · ' + sysLabel : '') + (p.sku ? ' · ' + esc(p.sku) : '') + '</div>' +
+        '<div class="text-xs text-gray-400">' + esc(sysName) + (catName ? ' › ' + esc(catName) : '') + (p.sku ? ' · ' + esc(p.sku) : '') + '</div>' +
       '</div>' +
       '<div class="text-xs text-gray-400 flex-shrink-0">' + (p.base_price != null ? '$' + Number(p.base_price).toFixed(2) : '—') + '</div>' +
     '</div>';
@@ -2512,25 +2451,19 @@ async function saveProduct() {
   }
 
   var priceVal = $('pm-base-price').value;
-  // Collect compatible_systems from checkboxes
-  var compatSystems = [];
-  document.querySelectorAll('.pm-sys-cb').forEach(function(cb) {
-    if (cb.checked) compatSystems.push(cb.value);
-  });
   var data = {
-    name:               name,
-    sku:                sku,
-    description:        $('pm-description').value.trim(),
-    gauge:              $('pm-gauge').value.trim() || null,
-    unit_type:          $('pm-unit-type').value,
-    base_price:         priceVal !== '' ? parseFloat(priceVal) : null,
-    finish:             $('pm-finish').value,
-    product_type:       $('pm-product-type').value || null,
-    catalog_section:    $('pm-catalog-section').value || null,
-    compatible_systems: compatSystems,
-    display_order:      parseInt($('pm-display-order').value) || 0,
-    active:             $('pm-active').checked
+    name:          name,
+    sku:           sku,
+    description:   $('pm-description').value.trim(),
+    gauge:         $('pm-gauge').value.trim() || null,
+    unit_type:     $('pm-unit-type').value,
+    base_price:    priceVal !== '' ? parseFloat(priceVal) : null,
+    finish:        $('pm-finish').value,
+    display_order: parseInt($('pm-display-order').value) || 0,
+    active:        $('pm-active').checked,
+    category_id:   prodState.selectedCategory ? prodState.selectedCategory.id : $('pm-category-select').value
   };
+  if (!data.category_id) { errEl.textContent = 'Category is required.'; errEl.classList.remove('hidden'); return; }
   if (imageUrl) data.image_url = imageUrl;
 
   var res = isNew
@@ -2542,8 +2475,7 @@ async function saveProduct() {
   if (prodState.selectedCategory) {
     prodShowProducts(prodState.selectedCategory);
   } else {
-    // Opened from catalog tab — reload the flat catalog
-    loadCatalogProducts();
+    prodShowCatalog();
   }
 }
 

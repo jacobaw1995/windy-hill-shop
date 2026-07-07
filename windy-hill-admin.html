@@ -225,8 +225,20 @@
       <!-- ── PRODUCTS TAB ──────────────────────────────────── -->
       <div id="tab-products" class="tab-panel">
 
-        <!-- Breadcrumb -->
-        <div id="prod-breadcrumb" class="flex items-center gap-2 text-sm mb-4 text-gray-500">
+        <!-- Top-level tab switcher: Catalog vs Systems -->
+        <div id="prod-top-tabs" class="flex gap-1 mb-5 bg-gray-100 rounded-xl p-1">
+          <button id="prod-tab-catalog" onclick="prodShowCatalog()"
+            class="flex-1 py-2 rounded-lg text-sm font-semibold transition-colors">
+            Catalog
+          </button>
+          <button id="prod-tab-systems" onclick="prodShowSystems()"
+            class="flex-1 py-2 rounded-lg text-sm font-semibold transition-colors">
+            Systems
+          </button>
+        </div>
+
+        <!-- Breadcrumb (shown when drilling into a system) -->
+        <div id="prod-breadcrumb" class="hidden items-center gap-2 text-sm mb-4 text-gray-500">
           <button onclick="prodShowSystems()" class="hover:text-gray-800 font-medium transition-colors">Systems</button>
           <span id="bc-cat-wrap" class="hidden items-center gap-2">
             <span class="text-gray-300">›</span>
@@ -238,11 +250,25 @@
           </span>
         </div>
 
+        <!-- View: Catalog (default) -->
+        <div id="prod-view-catalog">
+          <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-3">
+              <input id="catalog-search" type="text" placeholder="Search by name, SKU, or category…"
+                oninput="filterCatalog(this.value)"
+                class="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
+              <button onclick="openProductModalCatalog(null)" class="btn-rust text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap">+ New Product</button>
+            </div>
+            <div id="catalog-loading" class="py-12 flex justify-center"><div class="spinner"></div></div>
+            <div id="catalog-list" class="hidden divide-y divide-gray-50"></div>
+          </div>
+        </div>
+
         <!-- View: Systems -->
-        <div id="prod-view-systems">
+        <div id="prod-view-systems" class="hidden">
           <div class="bg-white rounded-xl shadow-sm overflow-hidden">
             <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-              <h2 class="font-bold text-gray-800">Systems</h2>
+              <h2 class="font-bold text-gray-800">Roof Systems</h2>
               <button onclick="openSystemModal(null)" class="btn-rust text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors">+ Add System</button>
             </div>
             <div id="systems-loading" class="py-12 flex justify-center"><div class="spinner"></div></div>
@@ -250,7 +276,7 @@
           </div>
         </div>
 
-        <!-- View: Categories -->
+        <!-- View: Categories (kanban — drilled in from Systems) -->
         <div id="prod-view-categories" class="hidden">
           <div class="mb-4 flex items-center justify-between">
             <h2 id="cats-title" class="font-bold text-gray-800 text-lg"></h2>
@@ -260,13 +286,13 @@
           <div id="kanban-board" class="hidden flex gap-4 overflow-x-auto pb-6" style="min-height:520px"></div>
         </div>
 
-        <!-- View: Products -->
+        <!-- View: Products within a category -->
         <div id="prod-view-products" class="hidden">
           <div class="bg-white rounded-xl shadow-sm overflow-hidden">
             <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between gap-3">
               <h2 id="prods-title" class="font-bold text-gray-800">Products</h2>
               <div class="flex gap-2">
-                <button onclick="openProductPicker()" class="text-xs font-semibold px-3 py-1.5 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors">Copy Existing</button>
+                <button onclick="openProductPicker()" class="text-xs font-semibold px-3 py-1.5 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors">Copy from Catalog</button>
                 <button onclick="openProductModal(null)" class="btn-rust text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors">+ New Product</button>
               </div>
             </div>
@@ -683,6 +709,13 @@
       </div>
       <div class="flex-1 overflow-y-auto px-6 py-5 space-y-4">
         <input type="hidden" id="pm-id">
+        <!-- Category selector — shown when adding/editing from Catalog context -->
+        <div id="pm-category-row" class="hidden">
+          <label class="modal-label">Category *</label>
+          <select id="pm-category-select" class="modal-input">
+            <option value="">— Select a category —</option>
+          </select>
+        </div>
         <div class="grid grid-cols-2 gap-4">
           <div><label class="modal-label">Name *</label>
             <input id="pm-name" type="text" class="modal-input"></div>
@@ -1720,14 +1753,130 @@ var prodState = {
 
 // ── Products Tab Entry ─────────────────────────────────────────
 
+function setProdTopTab(name) {
+  ['catalog','systems'].forEach(function(t) {
+    var btn = $('prod-tab-' + t);
+    if (!btn) return;
+    if (t === name) {
+      btn.className = 'flex-1 py-2 rounded-lg text-sm font-semibold transition-colors bg-white shadow-sm text-gray-900';
+    } else {
+      btn.className = 'flex-1 py-2 rounded-lg text-sm font-semibold transition-colors text-gray-500 hover:text-gray-700';
+    }
+  });
+}
+
+function hideAllProdViews() {
+  ['prod-view-catalog','prod-view-systems','prod-view-categories','prod-view-products'].forEach(function(id) {
+    $('prod-view-catalog' === id ? id : id) && $( id ).classList.add('hidden');
+  });
+}
+
 function onProductsTabOpen() {
-  if (prodState.systems.length === 0) prodShowSystems();
+  prodShowCatalog();
+}
+
+// ── Catalog View ───────────────────────────────────────────────
+
+var allCatalogProducts = [];
+
+async function prodShowCatalog() {
+  prodState.view = 'catalog';
+  prodState.selectedCategory = null;
+  setProdTopTab('catalog');
+  $('prod-top-tabs').classList.remove('hidden');
+  $('prod-breadcrumb').classList.remove('flex');
+  $('prod-breadcrumb').classList.add('hidden');
+  $('prod-view-catalog').classList.remove('hidden');
+  $('prod-view-systems').classList.add('hidden');
+  $('prod-view-categories').classList.add('hidden');
+  $('prod-view-products').classList.add('hidden');
+  $('catalog-search').value = '';
+  $('catalog-loading').classList.remove('hidden');
+  $('catalog-list').classList.add('hidden');
+
+  var res = await db.from('products').select('*, categories(name, systems(name))').order('name');
+  $('catalog-loading').classList.add('hidden');
+  if (res.error) { alert('Error loading catalog: ' + res.error.message); return; }
+  allCatalogProducts = res.data || [];
+  renderCatalogList(allCatalogProducts);
+}
+
+function renderCatalogList(products) {
+  var el = $('catalog-list');
+  if (!products.length) {
+    el.innerHTML = '<div class="py-12 text-center text-sm text-gray-400">No products yet — add your first product above.</div>';
+    el.classList.remove('hidden');
+    return;
+  }
+  el.innerHTML = products.map(function(p) {
+    var catName = p.categories ? p.categories.name : '';
+    var sysName = p.categories && p.categories.systems ? p.categories.systems.name : '';
+    var context = sysName ? esc(sysName) + (catName ? ' › ' + esc(catName) : '') : (catName ? esc(catName) : '<span class="text-amber-600">Unassigned</span>');
+    var pj = JSON.stringify(p).replace(/"/g,'&quot;');
+    return '<div class="flex items-center gap-4 px-5 py-3 hover:bg-gray-50 transition-colors">' +
+      '<div class="w-12 h-12 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">' +
+        (p.image_url ? '<img src="' + esc(p.image_url) + '" class="w-full h-full object-cover">' : '') +
+      '</div>' +
+      '<div class="flex-1 min-w-0">' +
+        '<div class="font-semibold text-gray-800 text-sm">' + esc(p.name) + '</div>' +
+        '<div class="text-xs text-gray-400 mt-0.5">' + (p.sku ? esc(p.sku) + ' · ' : '') + context + '</div>' +
+      '</div>' +
+      '<div class="text-sm font-semibold flex-shrink-0 mr-3 ' + (p.base_price != null ? 'text-gray-700' : 'text-amber-600') + '">' +
+        (p.base_price != null ? '$' + Number(p.base_price).toFixed(2) : 'Unpriced') +
+      '</div>' +
+      activeBadge(p.active) +
+      '<div class="flex gap-2 flex-shrink-0 ml-2">' +
+        '<button onclick="openProductModalCatalog(' + pj + ')" class="text-xs text-gray-500 hover:text-gray-800 border border-gray-200 rounded px-2 py-1 hover:bg-gray-50 transition-colors">Edit</button>' +
+        '<button onclick="deleteCatalogProduct(\'' + p.id + '\')" class="text-xs text-red-400 hover:text-red-600 border border-red-100 rounded px-2 py-1 hover:bg-red-50 transition-colors">Delete</button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+  el.classList.remove('hidden');
+}
+
+function filterCatalog(q) {
+  var lq = q.trim().toLowerCase();
+  var filtered = lq ? allCatalogProducts.filter(function(p) {
+    return (p.name || '').toLowerCase().includes(lq) ||
+           (p.sku  || '').toLowerCase().includes(lq) ||
+           (p.categories && (p.categories.name || '').toLowerCase().includes(lq)) ||
+           (p.categories && p.categories.systems && (p.categories.systems.name || '').toLowerCase().includes(lq));
+  }) : allCatalogProducts;
+  renderCatalogList(filtered);
+}
+
+async function openProductModalCatalog(prod) {
+  // Load all categories for the selector
+  var res = await db.from('categories').select('*, systems(name)').order('name');
+  var cats = res.data || [];
+  var sel = $('pm-category-select');
+  sel.innerHTML = '<option value="">— Select a category —</option>' +
+    cats.map(function(c) {
+      var sn = c.systems ? c.systems.name + ' › ' : '';
+      var selected = prod && prod.category_id === c.id ? ' selected' : '';
+      return '<option value="' + c.id + '"' + selected + '>' + esc(sn + c.name) + '</option>';
+    }).join('');
+  $('pm-category-row').classList.remove('hidden');
+  prodState.selectedCategory = null; // signal catalog context
+  openProductModal(prod || null);
+}
+
+async function deleteCatalogProduct(id) {
+  if (!confirm('Delete this product? This cannot be undone.')) return;
+  var res = await db.from('products').delete().eq('id', id);
+  if (res.error) { alert('Delete failed: ' + res.error.message); return; }
+  prodShowCatalog();
 }
 
 async function prodShowSystems() {
   prodState.view = 'systems';
   prodState.selectedSystem = null;
   prodState.selectedCategory = null;
+  setProdTopTab('systems');
+  $('prod-top-tabs').classList.remove('hidden');
+  $('prod-breadcrumb').classList.add('hidden');
+  $('prod-breadcrumb').classList.remove('flex');
+  $('prod-view-catalog').classList.add('hidden');
   $('prod-view-systems').classList.remove('hidden');
   $('prod-view-categories').classList.add('hidden');
   $('prod-view-products').classList.add('hidden');
@@ -1772,6 +1921,10 @@ async function prodShowSystem(system) {
   prodState.selectedSystem = system;
   prodState.selectedCategory = null;
   prodState.view = 'categories';
+  $('prod-top-tabs').classList.add('hidden');
+  $('prod-breadcrumb').classList.remove('hidden');
+  $('prod-breadcrumb').style.display = 'flex';
+  $('prod-view-catalog').classList.add('hidden');
   $('prod-view-systems').classList.add('hidden');
   $('prod-view-categories').classList.remove('hidden');
   $('prod-view-products').classList.add('hidden');
@@ -2308,8 +2461,9 @@ async function saveProduct() {
     finish:        $('pm-finish').value,
     display_order: parseInt($('pm-display-order').value) || 0,
     active:        $('pm-active').checked,
-    category_id:   prodState.selectedCategory.id
+    category_id:   prodState.selectedCategory ? prodState.selectedCategory.id : $('pm-category-select').value
   };
+  if (!data.category_id) { errEl.textContent = 'Category is required.'; errEl.classList.remove('hidden'); return; }
   if (imageUrl) data.image_url = imageUrl;
 
   var res = isNew
@@ -2318,7 +2472,11 @@ async function saveProduct() {
 
   if (res.error) { errEl.textContent = res.error.message; errEl.classList.remove('hidden'); return; }
   closeProductModal();
-  prodShowProducts(prodState.selectedCategory);
+  if (prodState.selectedCategory) {
+    prodShowProducts(prodState.selectedCategory);
+  } else {
+    prodShowCatalog();
+  }
 }
 
 async function deleteProduct(id) {
