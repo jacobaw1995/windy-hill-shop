@@ -156,22 +156,55 @@ async function loadAllColors() {
 }
 
 async function loadCatalog() {
-  var r = await db.from('systems')
-    .select('*, categories(*, products(*, product_colors(colors(*)), product_lengths(length_options(*))))')
+  // Fetch systems + wizard pipeline
+  var sysR = await db.from('systems')
+    .select('*, categories(*)')
     .eq('active', true)
     .order('display_order');
-  if (r.error) throw r.error;
-  r.data.forEach(function(sys) {
+  if (sysR.error) throw sysR.error;
+
+  // Collect all category IDs across all systems
+  var allCatIds = [];
+  (sysR.data || []).forEach(function(sys) {
+    (sys.categories || []).forEach(function(cat) { allCatIds.push(cat.id); });
+  });
+
+  // Fetch products and enabled product IDs per category in parallel
+  var [prodR, cpR] = await Promise.all([
+    db.from('products')
+      .select('*, product_colors(colors(*)), product_lengths(length_options(*))')
+      .eq('active', true),
+    allCatIds.length
+      ? db.from('category_products').select('category_id, product_id').in('category_id', allCatIds)
+      : Promise.resolve({ data: [] })
+  ]);
+  if (prodR.error) throw prodR.error;
+
+  // Build product lookup by ID
+  var productMap = {};
+  (prodR.data || []).forEach(function(p) { productMap[p.id] = p; });
+
+  // Build category → enabled product IDs lookup
+  var catProductIds = {};
+  (cpR.data || []).forEach(function(row) {
+    if (!catProductIds[row.category_id]) catProductIds[row.category_id] = [];
+    catProductIds[row.category_id].push(row.product_id);
+  });
+
+  // Attach enabled products to each wizard step
+  (sysR.data || []).forEach(function(sys) {
     sys.categories = (sys.categories || [])
       .filter(function(c) { return c.active; })
       .sort(function(a,b) { return a.display_order - b.display_order; });
     sys.categories.forEach(function(cat) {
-      cat.products = (cat.products || [])
-        .filter(function(p) { return p.active; })
-        .sort(function(a,b) { return a.display_order - b.display_order; });
+      var enabledIds = catProductIds[cat.id] || [];
+      cat.products = enabledIds
+        .map(function(pid) { return productMap[pid]; })
+        .filter(Boolean)
+        .sort(function(a,b) { return (a.display_order||0) - (b.display_order||0); });
     });
   });
-  return r.data;
+  return sysR.data;
 }
 
 function buildEntryScreen(systems) {
@@ -234,8 +267,13 @@ function goHome(e) {
 }
 
 function scrollToCart() {
-  var el = $('cart-panel');
-  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  var cartPanel = $('cart-panel');
+  // If the desktop cart panel is hidden or not rendered, open the mobile overlay
+  if (!cartPanel || cartPanel.offsetParent === null) {
+    showMobileCart();
+  } else {
+    cartPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 }
 
 async function init() {

@@ -156,34 +156,52 @@ async function loadAllColors() {
 }
 
 async function loadCatalog() {
-  // Fetch systems + wizard pipeline (category steps, no products nested)
+  // Fetch systems + wizard pipeline
   var sysR = await db.from('systems')
     .select('*, categories(*)')
     .eq('active', true)
     .order('display_order');
   if (sysR.error) throw sysR.error;
 
-  // Fetch flat product catalog — all products tagged with catalog_section + compatible_systems
-  var prodR = await db.from('products')
-    .select('*, product_colors(colors(*)), product_lengths(length_options(*))')
-    .eq('active', true)
-    .order('display_order');
+  // Collect all category IDs across all systems
+  var allCatIds = [];
+  (sysR.data || []).forEach(function(sys) {
+    (sys.categories || []).forEach(function(cat) { allCatIds.push(cat.id); });
+  });
+
+  // Fetch products and enabled product IDs per category in parallel
+  var [prodR, cpR] = await Promise.all([
+    db.from('products')
+      .select('*, product_colors(colors(*)), product_lengths(length_options(*))')
+      .eq('active', true),
+    allCatIds.length
+      ? db.from('category_products').select('category_id, product_id').in('category_id', allCatIds)
+      : Promise.resolve({ data: [] })
+  ]);
   if (prodR.error) throw prodR.error;
 
-  var allProducts = prodR.data || [];
+  // Build product lookup by ID
+  var productMap = {};
+  (prodR.data || []).forEach(function(p) { productMap[p.id] = p; });
 
-  // Attach products to each wizard step by matching catalog_section and compatible system
-  sysR.data.forEach(function(sys) {
+  // Build category → enabled product IDs lookup
+  var catProductIds = {};
+  (cpR.data || []).forEach(function(row) {
+    if (!catProductIds[row.category_id]) catProductIds[row.category_id] = [];
+    catProductIds[row.category_id].push(row.product_id);
+  });
+
+  // Attach enabled products to each wizard step
+  (sysR.data || []).forEach(function(sys) {
     sys.categories = (sys.categories || [])
       .filter(function(c) { return c.active; })
       .sort(function(a,b) { return a.display_order - b.display_order; });
     sys.categories.forEach(function(cat) {
-      cat.products = allProducts.filter(function(p) {
-        return p.catalog_section === cat.catalog_section
-          && Array.isArray(p.compatible_systems)
-          && p.compatible_systems.indexOf(sys.slug) !== -1;
-      });
-      cat.products.sort(function(a,b) { return a.display_order - b.display_order; });
+      var enabledIds = catProductIds[cat.id] || [];
+      cat.products = enabledIds
+        .map(function(pid) { return productMap[pid]; })
+        .filter(Boolean)
+        .sort(function(a,b) { return (a.display_order||0) - (b.display_order||0); });
     });
   });
   return sysR.data;

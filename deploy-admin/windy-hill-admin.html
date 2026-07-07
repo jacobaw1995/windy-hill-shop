@@ -2172,7 +2172,12 @@ async function toggleProductInCategory(productId, enabled) {
     if (res.error) { prodState.enabledProductIds.add(productId); alert('Error: ' + res.error.message); return; }
   }
   var countEl = $('prods-count');
-  if (countEl) countEl.textContent = prodState.enabledProductIds.size + ' of ' + prodState.products.length + ' enabled for this system step';
+  if (countEl) {
+    countEl.textContent = prodState.enabledProductIds.size + ' of ' + prodState.products.length + ' enabled for this system step · Saved ✓';
+    setTimeout(function() {
+      countEl.textContent = prodState.enabledProductIds.size + ' of ' + prodState.products.length + ' enabled for this system step';
+    }, 1800);
+  }
 }
 
 function activeBadge(active) {
