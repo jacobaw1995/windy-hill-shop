@@ -1314,7 +1314,7 @@ async function openColorAssignModal(colorId) {
   document.body.style.overflow = 'hidden';
 
   var [prodsRes, existRes] = await Promise.all([
-    db.from('products').select('id, name, sku, categories(name, systems(name))'),
+    db.from('products').select('id, name, sku, categories!category_id(name, systems(name))'),
     db.from('product_colors').select('product_id, price_modifier').eq('color_id', colorId)
   ]);
 
@@ -1461,7 +1461,7 @@ async function openLengthAssignModal(lengthId) {
   document.body.style.overflow = 'hidden';
 
   var [prodsRes, existRes] = await Promise.all([
-    db.from('products').select('id, name, sku, categories(name, systems(name))'),
+    db.from('products').select('id, name, sku, categories!category_id(name, systems(name))'),
     db.from('product_lengths').select('product_id').eq('length_option_id', lengthId)
   ]);
 
@@ -1794,7 +1794,7 @@ async function prodShowCatalog() {
   $('catalog-loading').classList.remove('hidden');
   $('catalog-list').classList.add('hidden');
 
-  var res = await db.from('products').select('*, categories(name, systems(name))').order('name');
+  var res = await db.from('products').select('*, categories!category_id(name, systems(name))').order('name');
   $('catalog-loading').classList.add('hidden');
   if (res.error) { alert('Error loading catalog: ' + res.error.message); return; }
   allCatalogProducts = res.data || [];
@@ -2380,7 +2380,7 @@ async function openProductPicker() {
   $('product-picker-modal').classList.remove('hidden');
   document.body.style.overflow = 'hidden';
 
-  var res = await db.from('products').select('*, categories(name, systems(name))').order('name');
+  var res = await db.from('products').select('*, categories!category_id(name, systems(name))').order('name');
   if (res.error) { $('picker-list').innerHTML = '<div class="py-8 text-center text-sm text-red-400">' + res.error.message + '</div>'; return; }
   allPickerProducts = res.data || [];
   renderPickerList(allPickerProducts);
