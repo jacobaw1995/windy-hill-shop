@@ -1351,7 +1351,7 @@ function getProductColors(product) {
 }
 
 function buildColorPickerHTML(catId, product) {
-  if (!product) return '';
+  if (!product || product.finish === 'none') return '';
   var colors = getProductColors(product);
   if (!colors.length) return '';
   var pickerId = 'colors-' + catId + '-' + product.id;
