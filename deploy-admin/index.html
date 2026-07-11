@@ -716,6 +716,13 @@
             <option value="none">N/A (no color selection)</option>
           </select>
         </div>
+        <div id="pm-colors-row" class="hidden">
+          <label class="modal-label">Colors</label>
+          <div id="pm-colors-loading" class="py-3 flex justify-center">
+            <div class="spinner" style="width:18px;height:18px;border-width:2px"></div>
+          </div>
+          <div id="pm-colors-grid" style="display:none;grid-template-columns:repeat(2,1fr);gap:2px;max-height:200px;overflow-y:auto;border:1px solid #e5e7eb;border-radius:8px;padding:6px"></div>
+        </div>
         <div><label class="modal-label">Product Image</label>
           <input type="hidden" id="pm-image-url">
           <div id="pm-img-preview" class="mb-2 hidden relative">
@@ -2341,19 +2348,24 @@ function openProductModal(prod) {
   $('pm-image-url').value = (prod && prod.image_url) || '';
   if (prod && prod.image_url) { $('pm-img-thumb').src = prod.image_url; $('pm-img-preview').classList.remove('hidden'); }
   else { $('pm-img-preview').classList.add('hidden'); }
+  $('pm-colors-grid').style.display = 'none';
+  $('pm-colors-loading').classList.remove('hidden');
+  loadProductModalColors(prod ? prod.id : null);
   $('product-modal').classList.remove('hidden');
   document.body.style.overflow = 'hidden';
 }
 
 var GAUGE_SECTIONS  = ['panel','ridge_cap','eave_trim','rake_trim','hip_cap','valley','clip','z_bar'];
 var FINISH_SECTIONS = ['panel','ridge_cap','eave_trim','rake_trim','hip_cap','valley'];
+var COLOR_SECTIONS  = ['panel','ridge_cap','eave_trim','rake_trim','hip_cap','valley','fastener','misc','closure','clip','z_bar'];
 
 function updateProductModalVisibility() {
   var section = $('pm-category-row') && !$('pm-category-row').classList.contains('hidden')
     ? ($('pm-category-select').value || '')
     : (prodState.selectedCategory ? prodState.selectedCategory.catalog_section || '' : '');
-  $('pm-gauge-row').classList.toggle('hidden',  GAUGE_SECTIONS.indexOf(section)  === -1);
-  $('pm-finish-row').classList.toggle('hidden', FINISH_SECTIONS.indexOf(section) === -1);
+  $('pm-gauge-row').classList.toggle('hidden',   GAUGE_SECTIONS.indexOf(section)  === -1);
+  $('pm-finish-row').classList.toggle('hidden',  FINISH_SECTIONS.indexOf(section) === -1);
+  $('pm-colors-row').classList.toggle('hidden',  COLOR_SECTIONS.indexOf(section)  === -1);
 }
 
 function updatePriceNullBadge() {
@@ -2361,6 +2373,63 @@ function updatePriceNullBadge() {
   var badge = $('pm-price-null-badge');
   if (!val && val !== 0) badge.classList.remove('hidden');
   else badge.classList.add('hidden');
+}
+
+var prodColorState = { initialIds: new Set() };
+
+async function loadProductModalColors(productId) {
+  if (!colorsList.length) {
+    var r = await db.from('colors').select('*').order('display_order');
+    colorsList = r.data || [];
+  }
+  var assignedIds = new Set();
+  if (productId) {
+    var r2 = await db.from('product_colors').select('color_id').eq('product_id', productId);
+    (r2.data || []).forEach(function(row) { assignedIds.add(row.color_id); });
+    prodColorState.initialIds = new Set(assignedIds);
+  } else {
+    prodColorState.initialIds = new Set();
+  }
+  $('pm-colors-loading').classList.add('hidden');
+  renderProductModalColors(assignedIds);
+}
+
+function renderProductModalColors(assignedIds) {
+  var el = $('pm-colors-grid');
+  if (!colorsList.length) {
+    el.innerHTML = '<div style="grid-column:span 2;color:#9ca3af;font-size:0.75rem;text-align:center;padding:8px">No colors yet — add them in the Colors tab.</div>';
+    el.style.display = 'grid';
+    return;
+  }
+  el.innerHTML = colorsList.map(function(c) {
+    var checked = assignedIds.has(c.id) ? 'checked' : '';
+    var swatch = c.swatch_image_url
+      ? '<img src="' + esc(c.swatch_image_url) + '" style="width:22px;height:22px;border-radius:3px;object-fit:cover;flex-shrink:0">'
+      : '<div style="width:22px;height:22px;border-radius:3px;flex-shrink:0;border:1px solid #e5e7eb;background:' + esc(c.hex_code || '#ccc') + '"></div>';
+    return '<label style="display:flex;align-items:center;gap:6px;padding:4px 6px;border-radius:5px;cursor:pointer" ' +
+      'onmouseover="this.style.background=\'#f9fafb\'" onmouseout="this.style.background=\'\'">' +
+      '<input type="checkbox" class="pm-color-cb" data-color-id="' + c.id + '" ' + checked + ' style="width:14px;height:14px;accent-color:#d97706;flex-shrink:0">' +
+      swatch +
+      '<span style="font-size:0.75rem;color:#374151;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(c.name) + '</span>' +
+    '</label>';
+  }).join('');
+  el.style.display = 'grid';
+}
+
+async function syncProductColors(productId) {
+  var checkboxes = document.querySelectorAll('.pm-color-cb');
+  var toAdd = [], toRemove = [];
+  checkboxes.forEach(function(cb) {
+    var cid = cb.dataset.colorId;
+    if (cb.checked  && !prodColorState.initialIds.has(cid)) toAdd.push(cid);
+    if (!cb.checked &&  prodColorState.initialIds.has(cid)) toRemove.push(cid);
+  });
+  var proms = [];
+  if (toRemove.length) proms.push(db.from('product_colors').delete().eq('product_id', productId).in('color_id', toRemove));
+  if (toAdd.length)    proms.push(db.from('product_colors').insert(toAdd.map(function(cid) {
+    return { product_id: productId, color_id: cid, price_modifier: 0 };
+  })));
+  if (proms.length) await Promise.all(proms);
 }
 
 var allPickerProducts = [];
@@ -2465,6 +2534,8 @@ async function saveProduct() {
     : await db.from('products').update(data).eq('id', id).select('id').single();
 
   if (res.error) { errEl.textContent = res.error.message; errEl.classList.remove('hidden'); return; }
+
+  await syncProductColors(res.data.id);
 
   // When creating a new product from the Systems context, auto-enable it in this category
   if (isNew && prodState.selectedCategory && res.data && res.data.id) {
