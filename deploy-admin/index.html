@@ -111,10 +111,6 @@
         <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
         Colors
       </div>
-      <div class="nav-link" id="nav-options" onclick="switchTab('options')">
-        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
-        Options
-      </div>
       <div class="nav-link" id="nav-photos" onclick="switchTab('photos')">
         <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
         Photos
@@ -316,26 +312,6 @@
       </div>
 
       <!-- ── OPTIONS TAB ────────────────────────────────────── -->
-      <div id="tab-options" class="tab-panel space-y-6">
-        <!-- Length Options -->
-        <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-          <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-            <div>
-              <h2 class="font-bold text-gray-800">Length Options</h2>
-              <p class="text-xs text-gray-400 mt-0.5">Available panel lengths shown to customers</p>
-            </div>
-            <button onclick="openLengthModal(null)" class="btn-rust text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors">+ Add Length</button>
-          </div>
-          <div id="lengths-loading" class="py-12 flex justify-center"><div class="spinner"></div></div>
-          <div id="lengths-list" class="hidden divide-y divide-gray-50"></div>
-          <div id="lengths-empty" class="hidden py-10 text-center text-sm text-gray-400">No length options yet.</div>
-        </div>
-        <!-- Finish note -->
-        <div class="bg-blue-50 border border-blue-100 rounded-xl px-5 py-4 text-sm text-blue-700">
-          <strong>Finish (Textured / Smooth / Both)</strong> is managed per product in the Products tab → Edit product → Finish field.
-        </div>
-      </div>
-
       <!-- ── PHOTOS TAB ──────────────────────────────────────── -->
       <div id="tab-photos" class="tab-panel space-y-5">
         <div class="bg-white rounded-xl shadow-sm overflow-hidden">
@@ -531,56 +507,6 @@
   </div>
 
   <!-- ── LENGTH MODAL ───────────────────────────────────────── -->
-  <div id="length-modal" class="hidden fixed inset-0 z-60 flex items-center justify-center p-4" style="background:rgba(0,0,0,0.55)">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm flex flex-col">
-      <div class="flex items-center justify-between px-6 py-4 border-b">
-        <h2 id="len-modal-title" class="font-bold text-lg" style="color:#1a2d4f">Length Option</h2>
-        <button onclick="closeLengthModal()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
-      </div>
-      <div class="px-6 py-5 space-y-4">
-        <input type="hidden" id="len-id">
-        <div><label class="modal-label">Label * <span class="font-normal text-gray-400">(shown to customer)</span></label>
-          <input id="len-label" type="text" placeholder="e.g. 12 ft" class="modal-input"></div>
-        <div><label class="modal-label">Value (feet) *</label>
-          <input id="len-value" type="number" step="0.5" min="1" placeholder="12" class="modal-input"></div>
-        <div class="grid grid-cols-2 gap-4">
-          <div><label class="modal-label">Display Order</label>
-            <input id="len-order" type="number" class="modal-input"></div>
-          <div class="flex items-end pb-1">
-            <label class="flex items-center gap-2 cursor-pointer text-sm font-medium text-gray-700">
-              <input id="len-active" type="checkbox" class="w-4 h-4 accent-amber-600"> Active
-            </label>
-          </div>
-        </div>
-        <p id="len-error" class="hidden text-xs text-red-600"></p>
-      </div>
-      <div class="px-6 py-4 border-t bg-gray-50 flex gap-3 rounded-b-2xl">
-        <button onclick="saveLength()" class="btn-rust flex-1 py-2.5 rounded-lg font-semibold text-sm">Save</button>
-        <button onclick="closeLengthModal()" class="flex-1 py-2.5 rounded-lg font-semibold text-sm border border-gray-200 hover:bg-gray-100">Cancel</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── LENGTH → PRODUCT ASSIGNMENT MODAL ─────────────────── -->
-  <div id="length-assign-modal" class="hidden fixed inset-0 z-60 flex items-center justify-center p-4" style="background:rgba(0,0,0,0.55)">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg flex flex-col max-h-[85vh]">
-      <div class="flex items-center justify-between px-6 py-4 border-b">
-        <div>
-          <h2 id="la-modal-title" class="font-bold text-lg" style="color:#1a2d4f">Assign Length to Products</h2>
-          <p class="text-xs text-gray-400 mt-0.5">Check the panel products that offer this length.</p>
-        </div>
-        <button onclick="closeLengthAssignModal()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none ml-4">&times;</button>
-      </div>
-      <div id="la-list" class="flex-1 overflow-y-auto px-6 py-4 space-y-2">
-        <div class="py-8 flex justify-center"><div class="spinner"></div></div>
-      </div>
-      <div class="px-6 py-4 border-t bg-gray-50 flex gap-3 rounded-b-2xl">
-        <button onclick="saveLengthAssignments()" class="btn-rust flex-1 py-2.5 rounded-lg font-semibold text-sm">Save Assignments</button>
-        <button onclick="closeLengthAssignModal()" class="flex-1 py-2.5 rounded-lg font-semibold text-sm border border-gray-200 hover:bg-gray-100">Cancel</button>
-      </div>
-    </div>
-  </div>
-
   <!-- ── DRIVER MODAL ───────────────────────────────────────── -->
   <div id="driver-modal" class="hidden fixed inset-0 z-60 flex items-center justify-center p-4" style="background:rgba(0,0,0,0.55)">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm flex flex-col">
@@ -973,7 +899,7 @@ async function forgotPassword() {
 // ── Tab Switching ──────────────────────────────────────────────
 var TAB_TITLES = {
   dashboard: 'Dashboard', products: 'Products', colors: 'Colors',
-  options: 'Options', photos: 'Photos', drivers: 'Drivers', settings: 'Settings'
+  photos: 'Photos', drivers: 'Drivers', settings: 'Settings'
 };
 
 function switchTab(tab) {
@@ -985,7 +911,6 @@ function switchTab(tab) {
   closeOrderDetail();
   if (tab === 'products') onProductsTabOpen();
   if (tab === 'colors')   onColorsTabOpen();
-  if (tab === 'options')  onOptionsTabOpen();
   if (tab === 'photos')   onPhotosTabOpen();
   if (tab === 'drivers')  onDriversTabOpen();
   if (tab === 'settings') onSettingsTabOpen();
@@ -1450,142 +1375,6 @@ async function saveColorAssignments() {
   closeColorAssignModal();
 }
 
-// ── Length Options ─────────────────────────────────────────────
-
-var lengthsList = [];
-var lengthAssignState = { lengthId: null, allProducts: [], existing: [] };
-
-async function loadLengths() {
-  $('lengths-loading').classList.remove('hidden');
-  $('lengths-list').classList.add('hidden');
-  $('lengths-empty').classList.add('hidden');
-  var res = await db.from('length_options').select('*').order('display_order');
-  $('lengths-loading').classList.add('hidden');
-  if (res.error) { alert('Error: ' + res.error.message); return; }
-  lengthsList = res.data || [];
-  renderLengthsList();
-}
-
-function renderLengthsList() {
-  var el = $('lengths-list');
-  if (!lengthsList.length) { $('lengths-empty').classList.remove('hidden'); return; }
-  el.innerHTML = lengthsList.map(function(l) {
-    return '<div class="flex items-center gap-4 px-5 py-3 hover:bg-gray-50 transition-colors">' +
-      '<div class="flex-1">' +
-        '<span class="font-semibold text-sm text-gray-800">' + esc(l.label) + '</span>' +
-        '<span class="text-xs text-gray-400 ml-2">' + esc(l.value_ft) + ' ft</span>' +
-      '</div>' +
-      '<div class="flex items-center gap-3">' +
-        activeBadge(l.active) +
-        '<button onclick="openLengthAssignModal(\'' + l.id + '\')" class="text-xs text-blue-600 border border-blue-100 rounded px-2 py-0.5 hover:bg-blue-50 transition-colors">Assign</button>' +
-        '<button onclick="openLengthModal(' + JSON.stringify(l).replace(/"/g,'&quot;') + ')" class="text-xs text-gray-500 border border-gray-200 rounded px-2 py-0.5 hover:bg-gray-50 transition-colors">Edit</button>' +
-        '<button onclick="deleteLength(\'' + l.id + '\')" class="text-xs text-red-400 border border-red-100 rounded px-2 py-0.5 hover:bg-red-50 transition-colors">Del</button>' +
-      '</div>' +
-    '</div>';
-  }).join('');
-  el.classList.remove('hidden');
-}
-
-function openLengthModal(len) {
-  var isNew = !len;
-  $('len-modal-title').textContent = isNew ? 'Add Length' : 'Edit Length';
-  $('len-id').value     = len ? len.id : '';
-  $('len-label').value  = len ? len.label || '' : '';
-  $('len-value').value  = len ? len.value_ft || '' : '';
-  $('len-order').value  = len ? len.display_order || 0 : (lengthsList.length + 1);
-  $('len-active').checked = len ? !!len.active : true;
-  $('len-error').classList.add('hidden');
-  $('length-modal').classList.remove('hidden');
-  document.body.style.overflow = 'hidden';
-}
-
-function closeLengthModal() {
-  $('length-modal').classList.add('hidden');
-  document.body.style.overflow = '';
-}
-
-async function saveLength() {
-  var id    = $('len-id').value;
-  var errEl = $('len-error');
-  errEl.classList.add('hidden');
-  var label = $('len-label').value.trim();
-  var value = parseFloat($('len-value').value);
-  if (!label || isNaN(value)) { errEl.textContent = 'Label and value (ft) are required.'; errEl.classList.remove('hidden'); return; }
-
-  var data = { label: label, value_ft: value, display_order: parseInt($('len-order').value)||0, active: $('len-active').checked };
-  var res = id
-    ? await db.from('length_options').update(data).eq('id', id)
-    : await db.from('length_options').insert(data);
-  if (res.error) { errEl.textContent = res.error.message; errEl.classList.remove('hidden'); return; }
-  closeLengthModal();
-  loadLengths();
-}
-
-async function deleteLength(id) {
-  if (!confirm('Delete this length option?')) return;
-  await db.from('product_lengths').delete().eq('length_option_id', id);
-  var res = await db.from('length_options').delete().eq('id', id);
-  if (res.error) { alert('Delete failed: ' + res.error.message); return; }
-  loadLengths();
-}
-
-async function openLengthAssignModal(lengthId) {
-  var len = lengthsList.find(function(l) { return l.id === lengthId; });
-  lengthAssignState.lengthId = lengthId;
-  $('la-modal-title').textContent = 'Assign "' + (len ? len.label : '') + '" to Products';
-  $('la-list').innerHTML = '<div class="py-8 flex justify-center"><div class="spinner"></div></div>';
-  $('length-assign-modal').classList.remove('hidden');
-  document.body.style.overflow = 'hidden';
-
-  var [prodsRes, catRes3, existRes] = await Promise.all([
-    db.from('products').select('id, name, sku, catalog_section').order('name'),
-    db.from('categories').select('id, name, catalog_section, systems(name)'),
-    db.from('product_lengths').select('product_id').eq('length_option_id', lengthId)
-  ]);
-  var catMap3 = {};
-  (catRes3.data || []).forEach(function(c) { if (c.catalog_section) catMap3[c.catalog_section] = c; });
-
-  lengthAssignState.allProducts = (prodsRes.data || []).map(function(p) {
-    p.categories = catMap3[p.catalog_section] || null; return p;
-  });
-  lengthAssignState.existing    = existRes.data || [];
-  var existSet = new Set(lengthAssignState.existing.map(function(r) { return r.product_id; }));
-
-  $('la-list').innerHTML = lengthAssignState.allProducts.map(function(p) {
-    var checked = existSet.has(p.id) ? 'checked' : '';
-    var sys = p.categories && p.categories.systems ? p.categories.systems.name : '';
-    var cat = p.categories ? p.categories.name : '';
-    return '<label class="flex items-center gap-3 py-2 cursor-pointer hover:bg-gray-50 rounded px-2 -mx-2">' +
-      '<input type="checkbox" data-pid="' + p.id + '" class="length-assign-cb w-4 h-4 accent-amber-600" ' + checked + '>' +
-      '<div class="min-w-0">' +
-        '<span class="text-sm font-medium text-gray-800">' + esc(p.name) + '</span>' +
-        '<span class="text-xs text-gray-400 ml-2">' + esc(sys) + ' › ' + esc(cat) + '</span>' +
-      '</div>' +
-    '</label>';
-  }).join('') || '<p class="text-sm text-gray-400 text-center py-4">No products found.</p>';
-}
-
-function closeLengthAssignModal() {
-  $('length-assign-modal').classList.add('hidden');
-  document.body.style.overflow = '';
-}
-
-async function saveLengthAssignments() {
-  var lengthId = lengthAssignState.lengthId;
-  var checkboxes = document.querySelectorAll('.length-assign-cb');
-  var toInsert = [];
-  checkboxes.forEach(function(cb) {
-    if (cb.checked) toInsert.push({ length_option_id: lengthId, product_id: cb.dataset.pid });
-  });
-
-  await db.from('product_lengths').delete().eq('length_option_id', lengthId);
-  if (toInsert.length) {
-    var res = await db.from('product_lengths').insert(toInsert);
-    if (res.error) { alert('Save failed: ' + res.error.message); return; }
-  }
-  closeLengthAssignModal();
-}
-
 // ── Photos Library ─────────────────────────────────────────────
 
 var photoFiles = [];
@@ -1924,7 +1713,7 @@ async function saveAllSettings() {
 // ── Tab open hooks ─────────────────────────────────────────────
 
 function onColorsTabOpen()  { if (!colorsList.length)  loadColors(); }
-function onOptionsTabOpen() { if (!lengthsList.length)  loadLengths(); }
+
 function onPhotosTabOpen()  { loadPhotos(); }
 function onDriversTabOpen() { if (!driversList.length)  loadDrivers(); }
 function onSettingsTabOpen() { loadSettings(); }
