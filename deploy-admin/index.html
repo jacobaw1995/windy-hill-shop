@@ -729,7 +729,7 @@
         <!-- Category selector — shown when adding/editing from Catalog context -->
         <div id="pm-category-row" class="hidden">
           <label class="modal-label">Category *</label>
-          <select id="pm-category-select" class="modal-input">
+          <select id="pm-category-select" class="modal-input" onchange="updateProductModalVisibility()">
             <option value="">— Select a category —</option>
           </select>
         </div>
@@ -742,8 +742,6 @@
         <div><label class="modal-label">Description</label>
           <textarea id="pm-description" rows="2" class="modal-input resize-none"></textarea></div>
         <div class="grid grid-cols-2 gap-4">
-          <div><label class="modal-label">Gauge <span class="font-normal text-gray-400">(optional)</span></label>
-            <input id="pm-gauge" type="text" placeholder="e.g. 29ga" class="modal-input"></div>
           <div><label class="modal-label">Unit Type</label>
             <select id="pm-unit-type" class="modal-input">
               <option value="linear_foot">Linear Foot</option>
@@ -752,21 +750,28 @@
               <option value="roll">Roll</option>
               <option value="square">Square</option>
             </select></div>
+          <div><label class="modal-label">Standard Size / Qty <span class="font-normal text-gray-400">e.g. 10' 6"</span></label>
+            <input id="pm-unit-size" type="text" placeholder='e.g. 10&apos; 6", 250 per bag' class="modal-input"></div>
         </div>
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="modal-label">
-              Base Price
-              <span id="pm-price-null-badge" class="hidden ml-1 text-xs font-semibold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">Unpriced</span>
-            </label>
-            <input id="pm-base-price" type="number" step="0.01" min="0" placeholder="0.00"
-              class="modal-input" oninput="updatePriceNullBadge()"></div>
-          <div><label class="modal-label">Finish</label>
-            <select id="pm-finish" class="modal-input">
-              <option value="both">Both (textured &amp; smooth)</option>
-              <option value="textured">Textured only</option>
-              <option value="smooth">Smooth only</option>
-            </select></div>
+        <div id="pm-gauge-row" class="hidden">
+          <label class="modal-label">Gauge</label>
+          <input id="pm-gauge" type="text" placeholder="e.g. 26ga" class="modal-input">
+        </div>
+        <div>
+          <label class="modal-label">
+            Base Price
+            <span id="pm-price-null-badge" class="hidden ml-1 text-xs font-semibold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">Unpriced</span>
+          </label>
+          <input id="pm-base-price" type="number" step="0.01" min="0" placeholder="0.00"
+            class="modal-input" oninput="updatePriceNullBadge()">
+        </div>
+        <div id="pm-finish-row" class="hidden">
+          <label class="modal-label">Finish</label>
+          <select id="pm-finish" class="modal-input">
+            <option value="both">Both (textured &amp; smooth)</option>
+            <option value="textured">Textured only</option>
+            <option value="smooth">Smooth only</option>
+          </select>
         </div>
         <div><label class="modal-label">Product Image</label>
           <div id="pm-img-preview" class="mb-2 hidden"><img id="pm-img-thumb" class="h-24 w-full object-cover rounded-lg border"></div>
@@ -2395,18 +2400,31 @@ function openProductModal(prod) {
   $('pm-description').value      = prod ? prod.description || '' : '';
   $('pm-gauge').value            = prod ? prod.gauge || '' : '';
   $('pm-unit-type').value        = prod ? prod.unit_type || 'each' : 'each';
+  $('pm-unit-size').value        = prod ? prod.unit_size || '' : '';
   $('pm-base-price').value       = prod && prod.base_price != null ? prod.base_price : '';
   $('pm-finish').value           = prod ? prod.finish || 'both' : 'both';
   $('pm-display-order').value    = prod ? prod.display_order || 0 : (prodState.products.length + 1);
   $('pm-active').checked         = prod ? !!prod.active : true;
   $('pm-error').classList.add('hidden');
   updatePriceNullBadge();
+  updateProductModalVisibility();
   var prev = $('pm-img-preview');
   if (prod && prod.image_url) { $('pm-img-thumb').src = prod.image_url; prev.classList.remove('hidden'); }
   else { prev.classList.add('hidden'); }
   $('pm-image-file').value = '';
   $('product-modal').classList.remove('hidden');
   document.body.style.overflow = 'hidden';
+}
+
+var GAUGE_SECTIONS  = ['panel','ridge_cap','eave_trim','rake_trim','hip_cap','valley','clip','z_bar'];
+var FINISH_SECTIONS = ['panel','ridge_cap','eave_trim','rake_trim','hip_cap','valley'];
+
+function updateProductModalVisibility() {
+  var section = $('pm-category-row') && !$('pm-category-row').classList.contains('hidden')
+    ? ($('pm-category-select').value || '')
+    : (prodState.selectedCategory ? prodState.selectedCategory.catalog_section || '' : '');
+  $('pm-gauge-row').classList.toggle('hidden',  GAUGE_SECTIONS.indexOf(section)  === -1);
+  $('pm-finish-row').classList.toggle('hidden', FINISH_SECTIONS.indexOf(section) === -1);
 }
 
 function updatePriceNullBadge() {
@@ -2508,6 +2526,7 @@ async function saveProduct() {
     description:   $('pm-description').value.trim(),
     gauge:         $('pm-gauge').value.trim() || null,
     unit_type:     $('pm-unit-type').value,
+    unit_size:     $('pm-unit-size').value.trim() || null,
     base_price:    priceVal !== '' ? parseFloat(priceVal) : null,
     finish:        $('pm-finish').value,
     display_order: parseInt($('pm-display-order').value) || 0,
