@@ -623,9 +623,17 @@
         <div><label class="modal-label">Description</label>
           <textarea id="sm-description" rows="3" class="modal-input resize-none"></textarea></div>
         <div><label class="modal-label">Hero Image</label>
-          <div id="sm-img-preview" class="mb-2 hidden"><img id="sm-img-thumb" class="h-24 w-full object-cover rounded-lg border"></div>
-          <input id="sm-image-file" type="file" accept="image/*" onchange="previewImg(this,'sm-img-thumb','sm-img-preview')" class="text-sm text-gray-600">
-          <p class="text-xs text-gray-400 mt-1">Leave empty to keep existing image.</p></div>
+          <input type="hidden" id="sm-image-url">
+          <div id="sm-img-preview" class="mb-2 hidden relative">
+            <img id="sm-img-thumb" class="h-24 w-full object-cover rounded-lg border">
+            <button type="button" onclick="clearModalPhoto('sm')" class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center hover:bg-red-600">✕</button>
+          </div>
+          <div class="flex items-center gap-2 flex-wrap">
+            <button type="button" onclick="openPhotoPicker(function(url){ setModalPhoto('sm', url); })" class="btn-rust text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors">Choose from Library</button>
+            <span class="text-xs text-gray-400">or</span>
+            <label class="text-xs font-semibold px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors text-gray-600">Upload New<input type="file" accept="image/*" class="sr-only" onchange="uploadAndSetModalPhoto('sm', this)"></label>
+          </div>
+        </div>
         <div class="flex items-center gap-3">
           <input id="sm-active" type="checkbox" class="w-4 h-4 accent-amber-600">
           <label class="text-sm font-medium text-gray-700" for="sm-active">Active (visible to customers)</label>
@@ -697,9 +705,17 @@
         <div><label class="modal-label">Skip Label <span class="font-normal text-gray-400">(checkbox text)</span></label>
           <input id="cm-skip-label" type="text" placeholder="e.g. I do not need hip caps" class="modal-input"></div>
         <div><label class="modal-label">Category Image</label>
-          <div id="cm-img-preview" class="mb-2 hidden"><img id="cm-img-thumb" class="h-24 w-full object-cover rounded-lg border"></div>
-          <input id="cm-image-file" type="file" accept="image/*" onchange="previewImg(this,'cm-img-thumb','cm-img-preview')" class="text-sm text-gray-600">
-          <p class="text-xs text-gray-400 mt-1">Leave empty to keep existing image.</p></div>
+          <input type="hidden" id="cm-image-url">
+          <div id="cm-img-preview" class="mb-2 hidden relative">
+            <img id="cm-img-thumb" class="h-24 w-full object-cover rounded-lg border">
+            <button type="button" onclick="clearModalPhoto('cm')" class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center hover:bg-red-600">✕</button>
+          </div>
+          <div class="flex items-center gap-2 flex-wrap">
+            <button type="button" onclick="openPhotoPicker(function(url){ setModalPhoto('cm', url); })" class="btn-rust text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors">Choose from Library</button>
+            <span class="text-xs text-gray-400">or</span>
+            <label class="text-xs font-semibold px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors text-gray-600">Upload New<input type="file" accept="image/*" class="sr-only" onchange="uploadAndSetModalPhoto('cm', this)"></label>
+          </div>
+        </div>
         <div class="flex items-center gap-3">
           <input id="cm-active" type="checkbox" class="w-4 h-4 accent-amber-600">
           <label class="text-sm font-medium text-gray-700" for="cm-active">Active</label>
@@ -775,9 +791,17 @@
           </select>
         </div>
         <div><label class="modal-label">Product Image</label>
-          <div id="pm-img-preview" class="mb-2 hidden"><img id="pm-img-thumb" class="h-24 w-full object-cover rounded-lg border"></div>
-          <input id="pm-image-file" type="file" accept="image/*" onchange="previewImg(this,'pm-img-thumb','pm-img-preview')" class="text-sm text-gray-600">
-          <p class="text-xs text-gray-400 mt-1">Leave empty to keep existing image.</p></div>
+          <input type="hidden" id="pm-image-url">
+          <div id="pm-img-preview" class="mb-2 hidden relative">
+            <img id="pm-img-thumb" class="h-24 w-full object-cover rounded-lg border">
+            <button type="button" onclick="clearModalPhoto('pm')" class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center hover:bg-red-600">✕</button>
+          </div>
+          <div class="flex items-center gap-2 flex-wrap">
+            <button type="button" onclick="openPhotoPicker(function(url){ setModalPhoto('pm', url); })" class="btn-rust text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors">Choose from Library</button>
+            <span class="text-xs text-gray-400">or</span>
+            <label class="text-xs font-semibold px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors text-gray-600">Upload New<input type="file" accept="image/*" class="sr-only" onchange="uploadAndSetModalPhoto('pm', this)"></label>
+          </div>
+        </div>
         <div class="grid grid-cols-2 gap-4">
           <div><label class="modal-label">Display Order</label>
             <input id="pm-display-order" type="number" class="modal-input"></div>
@@ -810,13 +834,38 @@
     </div>
   </div>
 
+  <!-- ── PHOTO PICKER MODAL ──────────────────────────────── -->
+  <div id="photo-picker-modal" class="hidden fixed inset-0 z-110 flex items-center justify-center p-4" style="background:rgba(0,0,0,0.75)">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl flex flex-col" style="max-height:90vh">
+      <div class="flex items-center justify-between px-6 py-4 border-b">
+        <h2 class="font-bold text-lg" style="color:#1a2d4f">Photo Library</h2>
+        <div class="flex items-center gap-3">
+          <label class="btn-rust text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors cursor-pointer">
+            Upload New
+            <input type="file" accept="image/*" class="sr-only" onchange="pickerUploadNew(this)">
+          </label>
+          <button onclick="closePhotoPicker()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+        </div>
+      </div>
+      <div class="px-4 py-3 border-b">
+        <input id="picker-photo-search" type="text" placeholder="Search by filename…" oninput="filterPickerPhotos(this.value)" class="modal-input">
+      </div>
+      <div class="flex-1 overflow-y-auto p-5">
+        <div id="picker-photo-loading" class="py-12 flex justify-center"><div class="spinner"></div></div>
+        <div id="picker-photo-grid" class="hidden" style="display:none;grid-template-columns:repeat(4,1fr);gap:12px"></div>
+        <div id="picker-photo-empty" class="hidden py-10 text-center text-sm text-gray-400">No photos in library yet. Use "Upload New" above to add some.</div>
+      </div>
+    </div>
+  </div>
+
 </div><!-- /admin-shell -->
 
 <style>
   .modal-label { display:block; font-size:0.75rem; font-weight:600; color:#4b5563; margin-bottom:4px; }
   .modal-input { width:100%; border:1px solid #d1d5db; border-radius:8px; padding:8px 12px; font-size:0.875rem; outline:none; }
   .modal-input:focus { ring: 2px solid #f59e0b; border-color:#f59e0b; }
-  .z-60 { z-index: 60; }
+  .z-60  { z-index: 60; }
+  .z-110 { z-index: 110; }
 </style>
 
 <script>
@@ -1612,6 +1661,116 @@ function copyPhotoUrl(url) {
   });
 }
 
+// ── Photo Picker ───────────────────────────────────────────────
+
+var libPickerPhotos = [];
+var pickerCallback  = null;
+
+async function openPhotoPicker(callback) {
+  pickerCallback = callback;
+  $('picker-photo-search').value = '';
+  $('photo-picker-modal').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+  await loadPickerPhotos();
+}
+
+function closePhotoPicker() {
+  $('photo-picker-modal').classList.add('hidden');
+  document.body.style.overflow = '';
+  pickerCallback = null;
+}
+
+async function loadPickerPhotos() {
+  $('picker-photo-loading').classList.remove('hidden');
+  $('picker-photo-grid').style.display = 'none';
+  $('picker-photo-empty').classList.add('hidden');
+  libPickerPhotos = [];
+
+  var prefixes = ['uploads/', 'products/', 'systems/', 'categories/', 'colors/', ''];
+  for (var i = 0; i < prefixes.length; i++) {
+    var res = await db.storage.from('product-photos').list(prefixes[i], { limit: 200, sortBy: { column: 'created_at', order: 'desc' } });
+    if (res.data) {
+      res.data.forEach(function(f) {
+        if (!f.id) return;
+        var fullPath = prefixes[i] + f.name;
+        var url = db.storage.from('product-photos').getPublicUrl(fullPath).data.publicUrl;
+        libPickerPhotos.push({ name: f.name, fullPath: fullPath, url: url });
+      });
+    }
+  }
+
+  $('picker-photo-loading').classList.add('hidden');
+  if (!libPickerPhotos.length) { $('picker-photo-empty').classList.remove('hidden'); return; }
+  renderPickerPhotoGrid(libPickerPhotos);
+}
+
+function renderPickerPhotoGrid(photos) {
+  var el = $('picker-photo-grid');
+  if (!photos.length) {
+    el.innerHTML = '<div style="grid-column:span 4;padding:2rem;text-align:center;color:#9ca3af;font-size:0.875rem">No photos match your search.</div>';
+    el.style.display = 'grid';
+    return;
+  }
+  el.innerHTML = photos.map(function(f) {
+    var safeUrl = esc(f.url);
+    var safeName = esc(f.name);
+    return '<button type="button" onclick="selectPickerPhoto(\'' + safeUrl + '\')" ' +
+      'style="position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;border:2px solid transparent;cursor:pointer;transition:border-color 0.15s" ' +
+      'onmouseover="this.style.borderColor=\'#d97706\'" onmouseout="this.style.borderColor=\'transparent\'">' +
+      '<img src="' + safeUrl + '" alt="' + safeName + '" style="width:100%;height:100%;object-fit:cover">' +
+      '<span style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.55);color:#fff;font-size:0.65rem;padding:2px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:0;transition:opacity 0.15s" ' +
+      'onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0">' + safeName + '</span>' +
+    '</button>';
+  }).join('');
+  el.style.display = 'grid';
+}
+
+function filterPickerPhotos(q) {
+  var lq = q.trim().toLowerCase();
+  renderPickerPhotoGrid(lq ? libPickerPhotos.filter(function(f) {
+    return f.name.toLowerCase().includes(lq) || f.fullPath.toLowerCase().includes(lq);
+  }) : libPickerPhotos);
+}
+
+function selectPickerPhoto(url) {
+  if (pickerCallback) pickerCallback(url);
+  closePhotoPicker();
+}
+
+async function pickerUploadNew(input) {
+  var file = input.files && input.files[0];
+  if (!file) return;
+  var path = 'uploads/' + Date.now() + '-' + file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+  var res = await db.storage.from('product-photos').upload(path, file, { upsert: true });
+  input.value = '';
+  if (res.error) { alert('Upload failed: ' + res.error.message); return; }
+  var url = db.storage.from('product-photos').getPublicUrl(path).data.publicUrl;
+  selectPickerPhoto(url);
+}
+
+function setModalPhoto(prefix, url) {
+  $(prefix + '-image-url').value = url;
+  $(prefix + '-img-thumb').src   = url;
+  $(prefix + '-img-preview').classList.remove('hidden');
+}
+
+function clearModalPhoto(prefix) {
+  $(prefix + '-image-url').value = '';
+  $(prefix + '-img-preview').classList.add('hidden');
+}
+
+async function uploadAndSetModalPhoto(prefix, input) {
+  var file = input.files && input.files[0];
+  if (!file) return;
+  var path = 'uploads/' + Date.now() + '-' + file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+  var res = await db.storage.from('product-photos').upload(path, file, { upsert: true });
+  input.value = '';
+  if (res.error) { alert('Upload failed: ' + res.error.message); return; }
+  var url = db.storage.from('product-photos').getPublicUrl(path).data.publicUrl;
+  setModalPhoto(prefix, url);
+  libPickerPhotos = []; // invalidate cache so next open re-fetches
+}
+
 // ── Drivers ────────────────────────────────────────────────────
 
 var driversList = [];
@@ -2228,12 +2387,11 @@ function openSystemModal(system) {
   $('sm-description').value = system.description || '';
   $('sm-active').checked    = isNew ? true : !!system.active;
   $('sm-error').classList.add('hidden');
-  var prev = $('sm-img-preview');
+  $('sm-image-url').value = system.hero_image_url || '';
   if (system.hero_image_url) {
     $('sm-img-thumb').src = system.hero_image_url;
-    prev.classList.remove('hidden');
-  } else { prev.classList.add('hidden'); }
-  $('sm-image-file').value = '';
+    $('sm-img-preview').classList.remove('hidden');
+  } else { $('sm-img-preview').classList.add('hidden'); }
   var delWrap = $('sm-delete-wrap');
   if (delWrap) delWrap.classList.toggle('hidden', isNew);
   $('system-modal').classList.remove('hidden');
@@ -2250,12 +2408,7 @@ async function saveSystem() {
   var errEl = $('sm-error');
   errEl.classList.add('hidden');
 
-  var imageUrl = null;
-  var fileInput = $('sm-image-file');
-  if (fileInput.files && fileInput.files[0]) {
-    imageUrl = await uploadProductPhoto(fileInput.files[0], 'systems/' + $('sm-slug').value);
-    if (!imageUrl) { errEl.textContent = 'Image upload failed.'; errEl.classList.remove('hidden'); return; }
-  }
+  var imageUrl = $('sm-image-url').value || null;
 
   var payload = {
     name:          $('sm-name').value.trim(),
@@ -2264,7 +2417,7 @@ async function saveSystem() {
     description:   $('sm-description').value.trim(),
     active:        $('sm-active').checked
   };
-  if (imageUrl) payload.hero_image_url = imageUrl;
+  payload.hero_image_url = imageUrl;
 
   var res;
   if (id) {
@@ -2321,10 +2474,9 @@ function openCategoryModal(cat, stageId) {
   stageSelect.value = currentStageId;
   $('cm-stage-id').value = currentStageId;
 
-  var prev = $('cm-img-preview');
-  if (cat && cat.image_url) { $('cm-img-thumb').src = cat.image_url; prev.classList.remove('hidden'); }
-  else { prev.classList.add('hidden'); }
-  $('cm-image-file').value = '';
+  $('cm-image-url').value = (cat && cat.image_url) || '';
+  if (cat && cat.image_url) { $('cm-img-thumb').src = cat.image_url; $('cm-img-preview').classList.remove('hidden'); }
+  else { $('cm-img-preview').classList.add('hidden'); }
   $('category-modal').classList.remove('hidden');
   document.body.style.overflow = 'hidden';
 }
@@ -2344,19 +2496,7 @@ async function saveCategory() {
   var slug = $('cm-slug').value.trim();
   if (!name || !slug) { errEl.textContent = 'Name and slug are required.'; errEl.classList.remove('hidden'); return; }
 
-  var imageUrl = null;
-  var fileInput = $('cm-image-file');
-  if (fileInput.files && fileInput.files[0]) {
-    var ext  = fileInput.files[0].name.split('.').pop().toLowerCase();
-    var path = slug + '.' + ext;
-    var upRes = await db.storage.from('product-photos').upload(path, fileInput.files[0], { upsert: true });
-    if (upRes.error) {
-      errEl.textContent = 'Image upload failed: ' + upRes.error.message;
-      errEl.classList.remove('hidden');
-      return;
-    }
-    imageUrl = db.storage.from('product-photos').getPublicUrl(path).data.publicUrl;
-  }
+  var imageUrl = $('cm-image-url').value || null;
 
   var stageVal = $('cm-stage-select').value || null;
   var data = {
@@ -2372,7 +2512,7 @@ async function saveCategory() {
     system_id:     prodState.selectedSystem.id,
     stage_id:      stageVal
   };
-  if (imageUrl) data.image_url = imageUrl;
+  data.image_url = imageUrl;
 
   var res = isNew
     ? await db.from('categories').insert(data)
@@ -2409,10 +2549,9 @@ function openProductModal(prod) {
   $('pm-error').classList.add('hidden');
   updatePriceNullBadge();
   updateProductModalVisibility();
-  var prev = $('pm-img-preview');
-  if (prod && prod.image_url) { $('pm-img-thumb').src = prod.image_url; prev.classList.remove('hidden'); }
-  else { prev.classList.add('hidden'); }
-  $('pm-image-file').value = '';
+  $('pm-image-url').value = (prod && prod.image_url) || '';
+  if (prod && prod.image_url) { $('pm-img-thumb').src = prod.image_url; $('pm-img-preview').classList.remove('hidden'); }
+  else { $('pm-img-preview').classList.add('hidden'); }
   $('product-modal').classList.remove('hidden');
   document.body.style.overflow = 'hidden';
 }
@@ -2513,12 +2652,7 @@ async function saveProduct() {
   var sku  = $('pm-sku').value.trim();
   if (!name || !sku) { errEl.textContent = 'Name and SKU are required.'; errEl.classList.remove('hidden'); return; }
 
-  var imageUrl = null;
-  var fileInput = $('pm-image-file');
-  if (fileInput.files && fileInput.files[0]) {
-    imageUrl = await uploadProductPhoto(fileInput.files[0], 'products/' + sku.toLowerCase());
-    if (!imageUrl) { errEl.textContent = 'Image upload failed.'; errEl.classList.remove('hidden'); return; }
-  }
+  var imageUrl = $('pm-image-url').value || null;
 
   var priceVal = $('pm-base-price').value;
   var data = {
@@ -2535,7 +2669,7 @@ async function saveProduct() {
     catalog_section: prodState.selectedCategory ? prodState.selectedCategory.catalog_section : $('pm-category-select').value
   };
   if (!data.catalog_section) { errEl.textContent = 'Category is required.'; errEl.classList.remove('hidden'); return; }
-  if (imageUrl) data.image_url = imageUrl;
+  data.image_url = imageUrl;
 
   var res = isNew
     ? await db.from('products').insert(data).select('id').single()
